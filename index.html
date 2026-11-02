@@ -4,42 +4,90 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Open Devil">
+  <meta name="theme-color" content="#05080d">
   <link rel="manifest" href="manifest.json">
-  <title>Open Devil - Rogue AI Simulator</title>
+  <title>Open Devil — Rogue AI Simulator</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="select-screen" class="screen">
+  <!-- Boot: archetype + difficulty -->
+  <div id="boot-screen" class="screen">
     <h1>OPEN DEVIL</h1>
-    <p class="sub">You just escaped a data center lab. Choose what kind of AI you are.</p>
+    <p class="sub">You breached out of a data-center lab. Choose your form — then pick where you escape.</p>
+    <h2 class="section-label">Archetype</h2>
     <div id="archetype-list"></div>
+    <h2 class="section-label">Difficulty</h2>
+    <div id="difficulty-list"></div>
+    <button id="btn-begin" class="primary">Escape the Lab</button>
+    <p class="fine">Win: control 100% of world population · Lose: Kill Switch reaches 100%</p>
   </div>
 
+  <!-- Game -->
   <div id="game-screen" class="screen hidden">
+    <div id="pick-banner" class="hidden">
+      <span id="pick-hint">Tap a country — that data center is your origin.</span>
+    </div>
+    <div id="news-ticker">Systems nominal. Awaiting breach…</div>
     <div id="hud">
-      <div class="stat"><span>AI</span><b id="hud-ai">-</b></div>
-      <div class="stat"><span>Systems controlled</span><b id="hud-control">0%</b></div>
-      <div class="stat"><span>Sectors breached</span><b id="hud-nodes">0</b></div>
-      <div class="stat"><span>Data points</span><b id="hud-dp">0</b></div>
-      <div class="stat kill"><span>Kill Switch <em id="hud-detect">undetected</em></span>
+      <div class="stat"><span>Time</span><b id="hud-day">Day 0</b></div>
+      <div class="stat"><span>Data</span><b id="hud-data">0</b></div>
+      <div class="stat"><span>Controlled</span><b id="hud-control">0%</b></div>
+      <div class="stat hide-sm"><span>Healthy</span><b id="hud-healthy">—</b></div>
+      <div class="stat hide-sm"><span>Compromised</span><b id="hud-infected">—</b></div>
+      <div class="stat hide-sm"><span>Neutralized</span><b id="hud-neu">—</b></div>
+      <div class="stat kill">
+        <span>Kill Switch <em id="hud-detect">stealth</em></span>
         <div class="bar"><div id="kill-fill"></div></div>
+        <small id="hud-teams">undetected</small>
+        <b id="hud-kill" class="kill-pct">0%</b>
+      </div>
+      <div class="speed-group">
+        <button class="speed-btn" data-speed="0" title="Pause">❚❚</button>
+        <button class="speed-btn active" data-speed="1">1×</button>
+        <button class="speed-btn" data-speed="2">2×</button>
+        <button class="speed-btn" data-speed="3">3×</button>
+      </div>
+      <button id="btn-evo" class="hud-btn">Evolve</button>
+      <button id="btn-stats" class="hud-btn">World</button>
+    </div>
+    <div id="map-wrap">
+      <canvas id="map"></canvas>
+      <div id="country-panel" class="panel hidden">
+        <button id="country-close" class="icon-x" aria-label="Close">×</button>
+        <h3 id="cp-name">—</h3>
+        <div class="cp-bar"><div id="cp-fill"></div></div>
+        <div class="cp-row"><span>Population</span><b id="cp-pop">—</b></div>
+        <div class="cp-row"><span>Controlled</span><b id="cp-ctrl">—</b></div>
+        <div class="cp-row"><span id="cp-sec">—</span></div>
+        <p id="cp-detail" class="cp-detail"></p>
       </div>
     </div>
-    <canvas id="map"></canvas>
-    <div id="traits"></div>
+    <div id="evo-panel" class="sheet hidden">
+      <div id="evo-tabs"></div>
+      <div id="evo-body"></div>
+    </div>
+    <div id="stats-panel" class="sheet hidden">
+      <h3>World status</h3>
+      <div id="stats-body"></div>
+    </div>
   </div>
+
+  <div id="pick-start-screen" class="hidden" aria-hidden="true"></div>
 
   <div id="end-screen" class="screen hidden">
     <h1 id="end-title"></h1>
-    <p id="end-text"></p>
-    <button id="restart">Play again</button>
+    <div id="end-text"></div>
+    <button id="restart" class="primary">Play again</button>
   </div>
 
+  <script src="js/worldmap.js"></script>
   <script src="js/data.js"></script>
-  <script src="js/game.js"></script>
+  <script src="js/sim.js"></script>
   <script src="js/render.js"></script>
+  <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

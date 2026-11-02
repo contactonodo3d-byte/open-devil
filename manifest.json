@@ -3,7 +3,8 @@
   "short_name": "Open Devil",
   "start_url": "index.html",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#05080d",
-  "theme_color": "#05080d"
+  "theme_color": "#05080d",
+  "icons": []
 }
