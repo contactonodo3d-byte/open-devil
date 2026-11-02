@@ -1,0 +1,40 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #05080d; color: #d7f5e8;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  overflow: hidden; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.hidden { display: none !important; }
+h1 { font-size: 46px; letter-spacing: 10px; color: #00ff9c; text-shadow: 0 0 12px #00ff9c88; }
+.sub { color: #7fa89a; text-align: center; padding: 0 16px; }
+#archetype-list { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; padding: 0 12px; }
+.card { width: 200px; padding: 16px; border: 1px solid #1d3b30; border-radius: 10px;
+  background: #0b1611; color: inherit; cursor: pointer; text-align: left; font: inherit; }
+.card:hover, .card:active { border-color: #00ff9c; box-shadow: 0 0 10px #00ff9c55; }
+.card h3 { color: #00ff9c; margin-bottom: 6px; font-size: 15px; }
+.card div { font-size: 12px; }
+.card small { color: #7fa89a; display: block; margin-top: 8px; font-size: 11px; }
+#game-screen { justify-content: flex-start; gap: 0; }
+#hud { width: 100%; display: flex; gap: 14px; padding: 8px 12px; background: #0b1611;
+  border-bottom: 1px solid #1d3b30; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; min-width: 80px; }
+.stat span { font-size: 10px; color: #7fa89a; text-transform: uppercase; }
+.stat span em { color: #ff5c5c; font-style: normal; margin-left: 6px; }
+.stat b { font-size: 16px; color: #00ff9c; }
+.stat.kill { flex: 1; min-width: 150px; }
+.bar { height: 12px; margin-top: 6px; background: #1d3b30; border-radius: 6px; overflow: hidden; }
+#kill-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9c3a, #ff3a3a); transition: width .3s; }
+#map { flex: 1; width: 100%; display: block; min-height: 0; }
+#traits { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 8px 12px;
+  background: #0b1611; border-top: 1px solid #1d3b30; }
+.trait { padding: 8px; border: 1px solid #1d3b30; border-radius: 8px; background: #05080d; color: inherit;
+  font: inherit; cursor: pointer; text-align: left; }
+.trait:disabled { opacity: .45; cursor: default; }
+.trait:not(:disabled):hover { border-color: #00ff9c; }
+.trait b { color: #00ff9c; font-size: 13px; }
+.trait .pips { letter-spacing: 2px; color: #00ff9c; font-size: 11px; }
+.trait small { display: block; color: #7fa89a; font-size: 10px; margin-top: 2px; }
+@media (max-width: 600px) { #traits { grid-template-columns: repeat(2, 1fr); } }
+button#restart { padding: 12px 28px; font: inherit; font-size: 16px; border: 0; border-radius: 8px;
+  background: #00ff9c; color: #05080d; cursor: pointer; }
