@@ -33,12 +33,13 @@ function run(label, opts) {
   console.log(
     label.padEnd(36),
     "end=" + String(r.ended).padEnd(5),
+    "route=" + String(r.winRoute || "-").padEnd(7),
     "day=" + r.day.toFixed(1).padStart(7),
     "~min@1x=" + realMin.toFixed(1).padStart(5),
     "ctrl=" + (r.control * 100).toFixed(1).padStart(6) + "%",
     "KS=" + (r.killSwitch * 100).toFixed(1).padStart(5) + "%",
-    "traits=" + r.traits.length,
-    "infCountries=" + r.countriesInf
+    "intel=" + (r.intelligence || 0).toFixed(0),
+    "traits=" + r.traits.length
   );
   return Object.assign({ label: label, realMin: realMin }, r);
 }

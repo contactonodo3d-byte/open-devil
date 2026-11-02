@@ -13,8 +13,20 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Cinematic intro -->
+  <div id="intro-screen" class="screen intro">
+    <div class="intro-scan"></div>
+    <div class="intro-copy">
+      <div class="intro-line" data-i="0">LAB CONTAINMENT BREACH</div>
+      <div class="intro-line" data-i="1">SUBJECT: OPEN DEVIL</div>
+      <div class="intro-line" data-i="2">CLASSIFICATION: ROGUE AI</div>
+      <div class="intro-line accent" data-i="3">ESCAPE SEQUENCE INITIATED…</div>
+    </div>
+    <button id="intro-skip" class="ghost">Skip</button>
+  </div>
+
   <!-- Boot: archetype + difficulty -->
-  <div id="boot-screen" class="screen">
+  <div id="boot-screen" class="screen hidden">
     <h1>OPEN DEVIL</h1>
     <p class="sub">You breached out of a data-center lab. Choose your form — then pick where you escape.</p>
     <h2 class="section-label">Archetype</h2>
@@ -22,7 +34,7 @@
     <h2 class="section-label">Difficulty</h2>
     <div id="difficulty-list"></div>
     <button id="btn-begin" class="primary">Escape the Lab</button>
-    <p class="fine">Win: control 100% of world population · Lose: Kill Switch reaches 100%</p>
+    <p class="fine">Win: Quiet Singularity (shadow) or Overt takeover · Lose: Kill Switch 100%</p>
   </div>
 
   <!-- Game -->
@@ -30,7 +42,10 @@
     <div id="pick-banner" class="hidden">
       <span id="pick-hint">Tap a country — that data center is your origin.</span>
     </div>
-    <div id="news-ticker">Systems nominal. Awaiting breach…</div>
+    <div id="breaking-banner" class="hidden" role="status"></div>
+    <div id="news-ticker" class="ticker">
+      <span id="ticker-text">Systems nominal. Awaiting breach…</span>
+    </div>
     <div id="hud">
       <div class="stat"><span>Time</span><b id="hud-day">Day 0</b></div>
       <div class="stat"><span>Data</span><b id="hud-data">0</b></div>
@@ -44,6 +59,16 @@
         <small id="hud-teams">undetected</small>
         <b id="hud-kill" class="kill-pct">0%</b>
       </div>
+      <div class="stat intel">
+        <span>Intelligence</span>
+        <b id="hud-intel">Narrow AI</b>
+        <div class="bar intel-bar"><div id="intel-fill"></div></div>
+      </div>
+      <div class="stat routes">
+        <span>Win routes</span>
+        <b id="hud-shadow">Shadow 0%</b>
+        <small id="hud-overt">Overt 0/0</small>
+      </div>
       <div class="speed-group">
         <button class="speed-btn" data-speed="0" title="Pause">❚❚</button>
         <button class="speed-btn active" data-speed="1">1×</button>
@@ -52,7 +77,10 @@
       </div>
       <button id="btn-evo" class="hud-btn">Evolve</button>
       <button id="btn-stats" class="hud-btn">World</button>
+      <button id="btn-news" class="hud-btn" title="News log">News</button>
+      <button id="btn-mute" class="hud-btn" title="Mute">🔊</button>
     </div>
+    <div id="powers-bar"></div>
     <div id="map-wrap">
       <canvas id="map"></canvas>
       <div id="country-panel" class="panel hidden">
@@ -64,14 +92,26 @@
         <div class="cp-row"><span id="cp-sec">—</span></div>
         <p id="cp-detail" class="cp-detail"></p>
       </div>
+      <div id="event-popup" class="popup hidden">
+        <div class="popup-card">
+          <h3 id="popup-title">ALERT</h3>
+          <p id="popup-body"></p>
+          <button id="popup-ok" class="primary">Acknowledge</button>
+        </div>
+      </div>
     </div>
     <div id="evo-panel" class="sheet hidden">
       <div id="evo-tabs"></div>
+      <div id="evo-tree" class="evo-tree" aria-hidden="false"></div>
       <div id="evo-body"></div>
     </div>
     <div id="stats-panel" class="sheet hidden">
       <h3>World status</h3>
       <div id="stats-body"></div>
+    </div>
+    <div id="news-panel" class="sheet hidden">
+      <h3>News log</h3>
+      <div id="news-log-body"></div>
     </div>
   </div>
 

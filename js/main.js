@@ -13,7 +13,7 @@
   let archetype = window.ARCHETYPES[0];
   let difficulty = window.DIFFICULTIES.find(function (d) { return d.id === "normal"; }) || window.DIFFICULTIES[1];
   let state = null;
-  let mode = "boot"; /* boot | pick | play */
+  let mode = "boot";
   let lastTs = 0;
   let dragging = false;
   let dragMoved = false;
@@ -34,6 +34,8 @@
       });
       renderer.setMap(window.WORLD_MAP);
       renderer.resize();
+      const dataEl = document.getElementById("hud-data");
+      if (renderer.setDataHudEl && dataEl) renderer.setDataHudEl(dataEl);
       mode = "pick";
       ui.showPickStart();
       document.getElementById("game-screen").classList.remove("hidden");
@@ -56,6 +58,9 @@
     },
     onDevolve: function (id) {
       if (state) window.Sim.devolveTrait(state, id);
+    },
+    onPower: function (id) {
+      if (state) window.Sim.usePower(state, id);
     },
     onSelectCountry: function (id) {
       if (state) ui.showCountry(state, id);
@@ -132,11 +137,14 @@
     dragging = false;
     if (dragMoved || !state) return;
 
-    /* bubble tap */
     if (mode === "play") {
       const bub = renderer.bubbleAt(p[0], p[1], state.bubbles);
       if (bub) {
-        window.Sim.tapBubble(state, bub.id);
+        const res = window.Sim.tapBubble(state, bub.id);
+        if (res && renderer.spawnBurst) {
+          renderer.spawnBurst(bub.x, bub.y, bub.kind, bub.value);
+        }
+        ui.beep(bub.kind === "infect" ? 880 : 330, 0.06);
         ui.updateHud(state);
         return;
       }
@@ -153,6 +161,11 @@
         ui.showGame();
         ui.showCountry(state, id);
         ui.updateHud(state);
+        if (renderer.focusOn) {
+          const c = state.world.countries[id];
+          renderer.focusOn(c.centroid[0], c.centroid[1], renderer.getView().scale * 1.3, 0.8);
+        }
+        ui.beep(520, 0.1);
       }
       return;
     }
@@ -168,16 +181,12 @@
   canvas.addEventListener("pointercancel", onPointerUp);
   canvas.addEventListener("wheel", function (e) {
     const p = canvasPos(e);
-    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-    renderer.zoomAt(p[0], p[1], factor);
+    renderer.zoomAt(p[0], p[1], e.deltaY < 0 ? 1.12 : 1 / 1.12);
     e.preventDefault();
   }, { passive: false });
 
-  window.addEventListener("resize", function () {
-    renderer.resize();
-  });
+  window.addEventListener("resize", function () { renderer.resize(); });
 
-  /* prevent page scroll bounce on iOS while playing */
   document.addEventListener("touchmove", function (e) {
     if (e.target === canvas) e.preventDefault();
   }, { passive: false });
@@ -199,17 +208,20 @@
       }
       renderer.draw(state, {
         selected: ui.getSelected(),
-        pickMode: mode === "pick"
+        pickMode: mode === "pick",
+        dt: dt
       });
     }
   }
 
   renderer.setMap(window.WORLD_MAP);
   renderer.resize();
-  ui.renderBoot();
+
+  ui.runIntro(function () {
+    ui.renderBoot();
+  });
   requestAnimationFrame(frame);
 
-  /* expose for tests */
   window.__OD = {
     getState: function () { return state; },
     getMode: function () { return mode; },
@@ -235,6 +247,10 @@
       ui.showCountry(state, id);
       return true;
     },
-    renderer: renderer
+    openEvolve: function () {
+      document.getElementById("btn-evo").click();
+    },
+    renderer: renderer,
+    ui: ui
   };
 })();
