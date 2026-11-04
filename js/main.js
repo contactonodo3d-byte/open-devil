@@ -14,10 +14,13 @@
   let difficulty = window.DIFFICULTIES.find(function (d) { return d.id === "normal"; }) || window.DIFFICULTIES[1];
   let state = null;
   let mode = "boot";
+  let accumulator = 0;
+  let saveElapsed = 0;
   let lastTs = 0;
   let dragging = false;
   let dragMoved = false;
   let lastX = 0, lastY = 0;
+  let startX = 0, startY = 0;
   let pointers = new Map();
   let pinchStartDist = 0;
   let pinchStartScale = 1;
@@ -33,17 +36,19 @@
         seed: (Date.now() % 100000) + 17
       });
       renderer.setMap(window.WORLD_MAP);
-      renderer.resize();
       const dataEl = document.getElementById("hud-data");
       if (renderer.setDataHudEl && dataEl) renderer.setDataHudEl(dataEl);
+      accumulator = 0;
       mode = "pick";
       ui.showPickStart();
+      renderer.resize();
+      renderer.resetView();
       document.getElementById("game-screen").classList.remove("hidden");
       document.getElementById("boot-screen").classList.add("hidden");
       document.getElementById("pick-banner").classList.remove("hidden");
     },
     onSpeed: function (sp) {
-      if (!state || mode !== "play") return;
+      if (!state || mode !== "play" || ui.isPanelOpen()) return;
       if (sp === 0) {
         state.paused = !state.paused;
         if (!state.paused && state.speed === 0) state.speed = 1;
@@ -72,6 +77,7 @@
       document.getElementById("game-screen").classList.add("hidden");
       document.getElementById("pick-banner").classList.add("hidden");
       ui.renderBoot();
+      refreshContinue();
     },
     getState: function () { return state; }
   });
@@ -86,11 +92,13 @@
     if (e.button != null && e.button !== 0) return;
     const p = canvasPos(e);
     dragging = true;
-    dragMoved = false;
+    if (pointers.size === 0) dragMoved = false;
+    startX = p[0]; startY = p[1];
     lastX = p[0];
     lastY = p[1];
     if (e.pointerId != null) {
       pointers.set(e.pointerId, p);
+      if (pointers.size >= 2) dragMoved = true;
       if (pointers.size === 2) {
         const pts = Array.from(pointers.values());
         pinchStartDist = Math.hypot(pts[0][0] - pts[1][0], pts[0][1] - pts[1][1]);
@@ -122,7 +130,7 @@
     const p = canvasPos(e);
     const dx = p[0] - lastX;
     const dy = p[1] - lastY;
-    if (Math.abs(dx) + Math.abs(dy) > 3) dragMoved = true;
+    if (Math.hypot(p[0] - startX, p[1] - startY) > 6) dragMoved = true;
     renderer.pan(dx, dy);
     lastX = p[0];
     lastY = p[1];
@@ -133,6 +141,11 @@
     const p = canvasPos(e);
     if (e.pointerId != null) pointers.delete(e.pointerId);
     if (pointers.size < 2) pinchStartDist = 0;
+    if (pointers.size) {
+      const remaining = pointers.values().next().value;
+      lastX = remaining[0]; lastY = remaining[1];
+      return;
+    }
     if (!dragging) return;
     dragging = false;
     if (dragMoved || !state) return;
@@ -159,12 +172,7 @@
         state.paused = false;
         document.getElementById("pick-banner").classList.add("hidden");
         ui.showGame();
-        ui.showCountry(state, id);
         ui.updateHud(state);
-        if (renderer.focusOn) {
-          const c = state.world.countries[id];
-          renderer.focusOn(c.centroid[0], c.centroid[1], renderer.getView().scale * 1.3, 0.8);
-        }
         ui.beep(520, 0.1);
       }
       return;
@@ -178,7 +186,10 @@
   canvas.addEventListener("pointerdown", onPointerDown);
   canvas.addEventListener("pointermove", onPointerMove);
   canvas.addEventListener("pointerup", onPointerUp);
-  canvas.addEventListener("pointercancel", onPointerUp);
+  canvas.addEventListener("pointercancel", function (e) {
+    dragMoved = true;
+    onPointerUp(e);
+  });
   canvas.addEventListener("wheel", function (e) {
     const p = canvasPos(e);
     renderer.zoomAt(p[0], p[1], e.deltaY < 0 ? 1.12 : 1 / 1.12);
@@ -186,6 +197,9 @@
   }, { passive: false });
 
   window.addEventListener("resize", function () { renderer.resize(); });
+  if (window.ResizeObserver) {
+    new ResizeObserver(function () { renderer.resize(); }).observe(canvas.parentElement);
+  }
 
   document.addEventListener("touchmove", function (e) {
     if (e.target === canvas) e.preventDefault();
@@ -200,9 +214,18 @@
 
     if (state && (mode === "play" || mode === "pick")) {
       if (mode === "play" && !state.ended) {
-        window.Sim.tick(state, dt);
+        if (!state.paused) accumulator += dt;
+        while (accumulator >= 1 / 30 && !state.ended) {
+          window.Sim.tick(state, 1 / 30);
+          accumulator -= 1 / 30;
+        }
         ui.updateHud(state);
+        saveElapsed += dt;
+        if (saveElapsed >= 10) { window.SaveGame.write(state); saveElapsed = 0; }
+        state.events.length = 0;
+        document.getElementById("operation-status").textContent = state.paused ? "OPERATION PAUSED" : state.detected ? "DETECTED · Humanity is responding" : "UNDETECTED · Expand your network";
         if (state.ended) {
+          window.SaveGame.clear();
           ui.showEnd(state, window.Sim.totals(state));
         }
       }
@@ -214,13 +237,88 @@
     }
   }
 
+  function refreshContinue() {
+    const saved = window.SaveGame.read();
+    document.getElementById("btn-continue").classList.toggle("hidden", !saved);
+    document.getElementById("save-status").textContent = saved ? "Saved operation · Day " + Math.floor(saved.day) + " · " + saved.difficulty.name : "";
+  }
+  document.getElementById("btn-continue").onclick = function () {
+    const saved = window.SaveGame.read(); if (!saved) { refreshContinue(); return; }
+    state = saved; mode = "play"; accumulator = 0;
+    renderer.setMap(window.WORLD_MAP); ui.showGame(); renderer.resize(); renderer.resetView();
+    document.getElementById("pick-banner").classList.add("hidden");
+    ui.updateHud(state);
+  };
+  document.getElementById("btn-menu").onclick = function () {
+    const saved = window.SaveGame.write(state);
+    if (state) state.paused = true;
+    mode = "boot"; ui.renderBoot(); refreshContinue();
+    if (!saved && state && state.startCountry !== null && !state.ended) document.getElementById("save-status").textContent = "Saving is unavailable in this browser. Keep this tab open.";
+  };
+  const select = document.getElementById("country-select");
+  window.WORLD_MAP.countries.map(function(c,i){ return {name:c.n,id:i}; }).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(c){
+    const option = document.createElement("option"); option.value=c.id; option.textContent=c.name; select.appendChild(option);
+  });
+  document.getElementById("country-go").onclick = function () {
+    if (!state || select.value === "") return;
+    const id = Number(select.value), c = state.world.countries[id];
+    const choosingOrigin = mode === "pick";
+    if (choosingOrigin && window.Sim.startInCountry(state,id)) {
+      mode="play";state.paused=false;state.speed=1;
+      document.getElementById("pick-banner").classList.add("hidden"); ui.showGame();
+    }
+    document.getElementById("country-tools").open = false;
+    if (!choosingOrigin) ui.showCountry(state,id);
+    ui.updateHud(state);
+    renderer.focusOn(c.centroid[0],c.centroid[1],renderer.getView().scale,0.4);
+  };
+  function zoom(factor) { renderer.zoomAt(canvas.clientWidth/2,canvas.clientHeight/2,factor); }
+  document.getElementById("zoom-in").onclick=function(){zoom(1.3);};
+  document.getElementById("zoom-out").onclick=function(){zoom(1/1.3);};
+  document.getElementById("zoom-fit").onclick=function(){renderer.resetView();};
+  const guide=document.getElementById("guide-dialog");
+  let guideState = null, guideWasPaused = true;
+  function openGuide(){
+    guideState = mode === "play" ? state : null;
+    guideWasPaused = guideState ? guideState.paused : true;
+    if (guideState) guideState.paused = true;
+    guide.showModal();
+  }
+  guide.addEventListener("close",function(){
+    if (state && state === guideState && !state.ended) state.paused = guideWasPaused || document.hidden;
+    guideState = null;
+  });
+  document.getElementById("btn-guide").onclick=openGuide;
+  document.getElementById("btn-help").onclick=openGuide;
+  document.getElementById("guide-close").onclick=document.getElementById("guide-done").onclick=function(){guide.close();};
+  const w=window.WIN;
+  document.getElementById("guide-thresholds").textContent="Shadow: critical infrastructure ≥ "+Math.round(w.shadowInfra*100)+"%, alarm ≤ "+Math.round(w.shadowAlarmMax*100)+"%, Kill Switch ≤ "+Math.round(w.shadowKsMax*100)+"%. Overt: infrastructure ≥ "+Math.round(w.overtInfra*100)+"%, military ≥ "+Math.round(w.overtMilitary*100)+"%.";
+  document.addEventListener("keydown",function(e){
+    if (guide.open || /INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName)) return;
+    if(mode!=="play" || ui.isPanelOpen())return;
+    if(e.code==="Space"){e.preventDefault();state.paused=!state.paused;}
+    if(e.key.toLowerCase()==="e")document.getElementById("btn-evo").click();
+    if(e.key==="+")zoom(1.3);if(e.key==="-")zoom(1/1.3);
+  });
+  document.addEventListener("visibilitychange",function(){
+    if(document.hidden && guide.open) guideWasPaused = true;
+    if(document.hidden && state){window.SaveGame.write(state);state.paused=true;accumulator=0;}
+    lastTs=0;
+  });
+  window.addEventListener("pagehide",function(){window.SaveGame.write(state);});
+
   renderer.setMap(window.WORLD_MAP);
   renderer.resize();
 
   ui.runIntro(function () {
     ui.renderBoot();
+    refreshContinue();
   });
   requestAnimationFrame(frame);
+
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+    navigator.serviceWorker.register("sw.js").catch(function () { /* Local play remains available. */ });
+  }
 
   window.__OD = {
     getState: function () { return state; },

@@ -16,10 +16,6 @@
       stats: $("stats-panel"),
       newsPanel: $("news-panel"),
       news: $("ticker-text") || $("news-ticker"),
-      breaking: $("breaking-banner"),
-      popup: $("event-popup"),
-      popupTitle: $("popup-title"),
-      popupBody: $("popup-body"),
       hudDay: $("hud-day"),
       hudData: $("hud-data"),
       hudControl: $("hud-control"),
@@ -38,7 +34,6 @@
       speedBtns: document.querySelectorAll(".speed-btn"),
       evoTabs: $("evo-tabs"),
       evoBody: $("evo-body"),
-      evoTree: $("evo-tree"),
       evoToggle: $("btn-evo"),
       statsToggle: $("btn-stats"),
       newsToggle: $("btn-news"),
@@ -62,6 +57,12 @@
     let displayCtrl = 0;
     let displayKs = 0;
     let audioCtx = null;
+    let lastPanelKey = "";
+    let activePanel = null, panelState = null, panelWasPaused = true, panelOpener = null;
+    const feed = G.createNewsFeed();
+    let newsState = null, newsTime = 0, displayedHeadline = null;
+
+    let evoKey = "";
 
     function ensureAudio() {
       if (muted || audioCtx) return audioCtx;
@@ -96,6 +97,7 @@
 
     function runIntro(done) {
       if (!els.intro) { done(); return; }
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { done(); return; }
       show("intro");
       const lines = els.intro.querySelectorAll(".intro-line");
       lines.forEach(function (ln) {
@@ -116,11 +118,22 @@
     }
 
     function renderBoot() {
+      feed.reset(); newsState = null; displayedHeadline = null;
+      els.news.textContent = "Choose your origin. Reports will appear as the operation unfolds.";
+      $("ticker-category").textContent = "SITUATION REPORT";
+      els.newsToggle.textContent = "News";
+      lastPanelKey = evoKey = "";
+      closeSheets(false, false);
+      selectedCountry = -1;
+      displayData = displayCtrl = displayKs = 0;
+      if (els.country) els.country.classList.add("hidden");
+      hooks.onArchetype(G.ARCHETYPES[0]);
+      hooks.onDifficulty(G.DIFFICULTIES.find(function (d) { return d.id === "normal"; }));
       const list = $("archetype-list");
       list.innerHTML = "";
       G.ARCHETYPES.forEach(function (a) {
         const btn = document.createElement("button");
-        btn.className = "card";
+        btn.className = "card" + (a.id === G.ARCHETYPES[0].id ? " selected" : "");
         btn.innerHTML = "<h3>" + a.name + "</h3><div>" + a.flavor + "</div>" +
           "<small>Spread ×" + a.infectivity.toFixed(2) +
           " · Stealth ×" + a.stealth.toFixed(2) +
@@ -130,9 +143,11 @@
             c.classList.remove("selected");
           });
           btn.classList.add("selected");
+          btn.parentElement.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",String(b===btn));});
           hooks.onArchetype(a);
           beep(660, 0.05);
         });
+        btn.setAttribute("aria-pressed",String(a.id===G.ARCHETYPES[0].id));
         list.appendChild(btn);
       });
       const diffs = $("difficulty-list");
@@ -146,17 +161,26 @@
             c.classList.remove("selected");
           });
           btn.classList.add("selected");
+          btn.parentElement.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",String(b===btn));});
           hooks.onDifficulty(d);
+          $("difficulty-help").textContent=d.desc;
           beep(520, 0.05);
         });
+        btn.title=d.desc;
+        btn.setAttribute("aria-pressed",String(d.id==="normal"));
         diffs.appendChild(btn);
       });
+      $("difficulty-help").textContent=G.DIFFICULTIES.find(function(d){return d.id==="normal";}).desc;
       $("btn-begin").onclick = function () { beep(880, 0.08); hooks.onBeginPick(); };
       show("boot");
     }
 
     function showPickStart() {
       show("game");
+      [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function(button){button.disabled=true;});
+      $("country-go").textContent = "Start here";
+      $("country-select").value = "";
+      $("country-tools").open = true;
       if (els.pickHint) {
         els.pickHint.textContent = "Tap the country whose data center you escape from.";
       }
@@ -164,7 +188,10 @@
 
     function showGame() {
       show("game");
-      evoOpen = false; statsOpen = false; newsOpen = false;
+      [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function(button){button.disabled=false;});
+      $("country-go").textContent = "Inspect";
+      $("country-tools").open = false;
+      closeSheets(false, false);
       if (els.evo) els.evo.classList.add("hidden");
       if (els.stats) els.stats.classList.add("hidden");
       if (els.newsPanel) els.newsPanel.classList.add("hidden");
@@ -175,6 +202,12 @@
     function setSpeed(sp) {
       els.speedBtns.forEach(function (b) {
         b.classList.toggle("active", Number(b.dataset.speed) === sp);
+        b.disabled = !!activePanel;
+        b.setAttribute("aria-pressed",String(Number(b.dataset.speed) === sp));
+        if (Number(b.dataset.speed) === 0) {
+          b.textContent = sp === 0 ? "Resume" : "Pause";
+          b.title = activePanel ? "Return to Map to resume" : b.textContent;
+        }
       });
     }
 
@@ -185,41 +218,63 @@
       });
     });
 
-    function closeSheets() {
+    function closeSheets(resume, restoreFocus) {
+      const state = hooks.getState();
+      if (resume !== false && state && state === panelState && !state.ended) {
+        state.paused = panelWasPaused || document.hidden;
+      }
       evoOpen = statsOpen = newsOpen = false;
-      if (els.evo) els.evo.classList.add("hidden");
-      if (els.stats) els.stats.classList.add("hidden");
-      if (els.newsPanel) els.newsPanel.classList.add("hidden");
+      [els.evo, els.stats, els.newsPanel].forEach(function (el) { el.classList.add("hidden"); });
+      $("workspace-stage").classList.remove("has-panel");
+      els.game.classList.remove("panel-open");
+      [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function (button) { button.setAttribute("aria-expanded", "false"); });
+      activePanel = panelState = null;
+      updateNavigation("map");
+      if (restoreFocus !== false && panelOpener && panelOpener.isConnected) panelOpener.focus();
+      panelOpener = null;
+      if (state) setSpeed(state.paused ? 0 : state.speed);
     }
 
-    if (els.evoToggle) {
-      els.evoToggle.addEventListener("click", function () {
-        evoOpen = !evoOpen;
-        if (evoOpen) { statsOpen = newsOpen = false; if (els.stats) els.stats.classList.add("hidden"); if (els.newsPanel) els.newsPanel.classList.add("hidden"); }
-        els.evo.classList.toggle("hidden", !evoOpen);
-        if (evoOpen) renderEvo(hooks.getState());
+    function openSheet(kind, opener) {
+      const state = hooks.getState();
+      if (!state || state.startCountry === null || state.ended) return;
+      const panel = kind === "evo" ? els.evo : kind === "stats" ? els.stats : els.newsPanel;
+      if (activePanel === panel) { closeSheets(); return; }
+      if (!activePanel) { panelWasPaused = state.paused; panelState = state; }
+      state.paused = true;
+      panelOpener = opener; activePanel = panel;
+      evoOpen = kind === "evo"; statsOpen = kind === "stats"; newsOpen = kind === "news";
+      [els.evo, els.stats, els.newsPanel].forEach(function (el) { el.classList.toggle("hidden", el !== panel); });
+      $("workspace-stage").classList.add("has-panel");
+      els.game.classList.add("panel-open");
+      $("country-tools").open = false;
+      els.country.classList.add("hidden"); selectedCountry = -1;
+      updateNavigation(kind);
+      opener.setAttribute("aria-expanded", "true");
+      if (evoOpen) renderEvo(state);
+      if (statsOpen) renderStats(state);
+      if (newsOpen) { renderNewsLog(state); feed.markRead(); els.newsToggle.textContent = "News"; }
+      setSpeed(0);
+      panel.querySelector(".sheet-close").focus();
+    }
+
+    [[els.evoToggle, "evo"], [els.statsToggle, "stats"], [els.newsToggle, "news"], [$("news-ticker"), "news"]].forEach(function (entry) {
+      entry[0].setAttribute("aria-expanded", "false");
+      entry[0].addEventListener("click", function () { openSheet(entry[1], entry[0]); });
+    });
+    $("btn-map").onclick = function () { closeSheets(true, false); };
+    function updateNavigation(kind) {
+      [[$("btn-map"),"map"],[els.evoToggle,"evo"],[els.statsToggle,"stats"],[els.newsToggle,"news"]].forEach(function(entry){
+        entry[0].classList.toggle("active",entry[1]===kind);
+        entry[0].setAttribute("aria-pressed",String(entry[1]===kind));
       });
     }
-    if (els.statsToggle) {
-      els.statsToggle.addEventListener("click", function () {
-        statsOpen = !statsOpen;
-        if (statsOpen) { evoOpen = newsOpen = false; if (els.evo) els.evo.classList.add("hidden"); if (els.newsPanel) els.newsPanel.classList.add("hidden"); }
-        els.stats.classList.toggle("hidden", !statsOpen);
-        if (statsOpen) renderStats(hooks.getState());
-      });
-    }
-    if (els.newsToggle) {
-      els.newsToggle.addEventListener("click", function () {
-        newsOpen = !newsOpen;
-        if (newsOpen) { evoOpen = statsOpen = false; if (els.evo) els.evo.classList.add("hidden"); if (els.stats) els.stats.classList.add("hidden"); }
-        els.newsPanel.classList.toggle("hidden", !newsOpen);
-        if (newsOpen) renderNewsLog(hooks.getState());
-      });
-    }
+    $("news-filter").onchange = function () { renderNewsLog(hooks.getState()); };
+    document.addEventListener("visibilitychange", function () { if (document.hidden && activePanel) panelWasPaused = true; });
     if (els.muteBtn) {
       els.muteBtn.addEventListener("click", function () {
         muted = !muted;
-        els.muteBtn.textContent = muted ? "🔇" : "🔊";
+        els.muteBtn.textContent = muted ? "Muted" : "Sound";
         if (!muted) ensureAudio();
       });
     }
@@ -232,74 +287,40 @@
     if (els.restart) {
       els.restart.addEventListener("click", function () { hooks.onRestart(); });
     }
-    if ($("popup-ok")) {
-      $("popup-ok").onclick = function () {
-        if (els.popup) els.popup.classList.add("hidden");
-        const st = hooks.getState();
-        if (st) st.pendingPopup = null;
-      };
-    }
-
-    function hex(cx, cy, r) {
-      const pts = [];
-      for (let i = 0; i < 6; i++) {
-        const a = Math.PI / 6 + i * Math.PI / 3;
-        pts.push((cx + r * Math.cos(a)).toFixed(1) + "," + (cy + r * Math.sin(a)).toFixed(1));
+    document.querySelectorAll(".sheet-close").forEach(function (button) { button.onclick = function () { closeSheets(); }; });
+    document.addEventListener("keydown", function (event) {
+      if ($("guide-dialog").open) return;
+      if (event.key === "Escape") {
+        if (activePanel) { event.preventDefault(); closeSheets(); }
+        else { els.country.classList.add("hidden"); selectedCountry = -1; }
       }
-      return pts.join(" ");
-    }
-
-    function renderEvoTree(state) {
-      if (!els.evoTree) return;
-      const traits = G.TRAITS.filter(function (t) { return t.tab === evoTab; });
-      const w = Math.max(320, traits.length * 70);
-      let svg = '<svg class="evo-svg" viewBox="0 0 ' + w + ' 110" width="100%" height="110">';
-      traits.forEach(function (t, i) {
-        const x = 40 + i * 70;
-        const y = 55;
-        const owned = state.traitsOwned.indexOf(t.id) >= 0;
-        const locked = t.prereq.some(function (p) { return state.traitsOwned.indexOf(p) < 0; }) ||
-          (t.intelReq && state.intelLevel < t.intelReq);
-        t.prereq.forEach(function (pid) {
-          const pi = traits.findIndex(function (x) { return x.id === pid; });
-          if (pi < 0) return;
-          const px = 40 + pi * 70;
-          svg += '<line x1="' + px + '" y1="55" x2="' + x + '" y2="55" stroke="' +
-            (owned ? "#00ff9c" : "#1d3b30") + '" stroke-width="2"/>';
-        });
-        const fill = owned ? "#0e241a" : locked ? "#0a1010" : "#0b1611";
-        const stroke = owned ? "#00ff9c" : locked ? "#223" : "#2a6b52";
-        svg += '<polygon points="' + hex(x, y, 22) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2"/>';
-        svg += '<text x="' + x + '" y="' + (y + 3) + '" text-anchor="middle" fill="' +
-          (owned ? "#00ff9c" : "#7fa89a") + '" font-size="8">' + t.name.split(" ")[0].slice(0, 7) + "</text>";
-      });
-      svg += "</svg>";
-      els.evoTree.innerHTML = svg;
-    }
+    });
 
     function renderEvo(state) {
       if (!els.evoTabs || !els.evoBody || !state) return;
-      els.evoTabs.innerHTML = "";
+
       G.TRAIT_TABS.forEach(function (tab) {
-        const b = document.createElement("button");
+        let b = els.evoTabs.querySelector("[data-tab=\""+tab.id+"\"]");
+        const freshTab = !b;
+        if (freshTab) {b=document.createElement("button");b.dataset.tab=tab.id;}
+        b.setAttribute("aria-pressed",String(tab.id===evoTab));
         b.className = "evo-tab" + (tab.id === evoTab ? " active" : "");
         b.textContent = tab.name;
-        b.addEventListener("click", function () {
+        if (freshTab) b.addEventListener("click", function () {
           evoTab = tab.id;
           renderEvo(hooks.getState());
         });
-        els.evoTabs.appendChild(b);
+        if (freshTab) els.evoTabs.appendChild(b);
       });
-      renderEvoTree(state);
-      els.evoBody.innerHTML = "";
-      const hint = document.createElement("p");
+      Array.from(els.evoBody.querySelectorAll("[data-trait]")).forEach(function(card){ if(state.traitById[card.dataset.trait].tab!==evoTab)card.remove(); });
+      const hint = els.evoBody.querySelector(".evo-hint") || document.createElement("p");
       hint.className = "evo-hint";
       const tabMeta = G.TRAIT_TABS.find(function (t) { return t.id === evoTab; });
       const lv = (G.INTEL_LEVELS || [])[state.intelLevel];
       hint.textContent = (tabMeta ? tabMeta.subtitle + " · " : "") +
         "Intelligence: " + (lv ? lv.name : "?") +
         " · Tap owned to devolve (−" + Math.round(G.DEVOLVE_FEE * 100) + "% fee)";
-      els.evoBody.appendChild(hint);
+      if (!hint.parentElement) els.evoBody.appendChild(hint);
 
       G.TRAITS.filter(function (t) { return t.tab === evoTab; }).forEach(function (t) {
         const owned = state.traitsOwned.indexOf(t.id) >= 0;
@@ -310,45 +331,52 @@
         });
         const lockedIntel = !owned && t.intelReq && state.intelLevel < t.intelReq;
         const locked = lockedPrereq || lockedIntel;
-        const card = document.createElement("button");
+        let card = els.evoBody.querySelector("[data-trait=\""+t.id+"\"]");
+        const freshCard = !card;
+        if (freshCard) card=document.createElement("button");
+        card.dataset.trait = t.id;
+        card.disabled = !owned && !can;
         card.className = "trait-card" + (owned ? " owned" : "") + (can ? " can" : "") + (locked ? " locked" : "");
         card.innerHTML = "<div class='tn'>" + t.name + "</div>" +
           "<div class='td'>" + t.desc + "</div>" +
           "<div class='tc'>" + (owned ? "OWNED · tap to devolve" :
             lockedIntel ? ("LOCKED · need " + ((G.INTEL_LEVELS || [])[t.intelReq] || {}).name) :
-            locked ? "LOCKED" : cost + " Data") + "</div>";
-        card.addEventListener("click", function () {
-          if (owned) {
-            if (G.Sim.canDevolve(state, t.id)) { hooks.onDevolve(t.id); beep(320, 0.06); }
-          } else if (can) {
+            locked ? "NEEDS " + t.prereq.filter(function(id){return state.traitsOwned.indexOf(id)<0;}).map(function(id){return state.traitById[id].name;}).join(", ") : cost + " Data") + "</div>";
+        if (freshCard) card.addEventListener("click", function () {
+          const current = hooks.getState();
+          if (current.traitsOwned.indexOf(t.id)>=0) {
+            if (G.Sim.canDevolve(current, t.id)) { hooks.onDevolve(t.id); beep(320, 0.06); }
+          } else if (G.Sim.canBuyTrait(current,t.id)) {
             hooks.onBuy(t.id); beep(740, 0.07, "sawtooth", 0.04);
           }
           renderEvo(hooks.getState());
           updateHud(hooks.getState());
         });
-        els.evoBody.appendChild(card);
+        if (freshCard) els.evoBody.appendChild(card);
       });
     }
 
     function renderPowers(state) {
       if (!els.powers || !state) return;
-      els.powers.innerHTML = "";
+
       (G.ACTIVE_POWERS || []).forEach(function (pw) {
         const ready = G.Sim.powerReady(state, pw.id);
         const cd = state.powerCd[pw.id] || 0;
-        const btn = document.createElement("button");
+        let btn = els.powers.querySelector("[data-power=\"" + pw.id + "\"]");
+        const fresh = !btn;
+        if (fresh) { btn = document.createElement("button"); btn.dataset.power=pw.id; }
         btn.className = "power-btn" + (ready ? " ready" : "");
         btn.title = pw.desc;
         btn.innerHTML = "<span class='pi'>" + pw.icon + "</span><span class='pn'>" + pw.name + "</span>" +
           "<span class='pcd'>" + (ready ? "READY" : (cd > 0 ? cd.toFixed(0) + "d" : "need " + pw.needSector)) + "</span>";
         btn.disabled = !ready;
-        btn.addEventListener("click", function () {
+        if (fresh) btn.addEventListener("click", function () {
           if (hooks.onPower) hooks.onPower(pw.id);
           beep(200, 0.12, "sawtooth", 0.05);
           renderPowers(hooks.getState());
           updateHud(hooks.getState());
         });
-        els.powers.appendChild(btn);
+        if (fresh) els.powers.appendChild(btn);
       });
     }
 
@@ -385,12 +413,51 @@
       els.statsBody.innerHTML = html;
     }
 
+    function importantReport(item) {
+      return item.kind !== "flavor" && !/_funny$/.test(item.id || "") && (item.breaking || item.priority >= 70);
+    }
+
     function renderNewsLog(state) {
       if (!els.newsLogBody || !state) return;
-      els.newsLogBody.innerHTML = (state.newsLog || []).slice(0, 60).map(function (n) {
-        return "<div class='news-item" + (n.breaking ? " brk" : "") + "'><small>Day " +
-          Math.floor(n.t) + "</small> " + n.text + "</div>";
-      }).join("") || "<p class='evo-hint'>No headlines yet.</p>";
+      els.newsLogBody.replaceChildren();
+      const importantOnly = $("news-filter").value === "important";
+      const items = (state.newsLog || []).filter(function (item) { return !importantOnly || importantReport(item); });
+      if (!items.length) {
+        const empty = document.createElement("p"); empty.className = "news-empty";
+        empty.textContent = importantOnly ? "No important reports yet. Check All reports for the operation log." : "No reports yet. Events will be recorded here as the operation unfolds.";
+        els.newsLogBody.appendChild(empty);
+      }
+      items.forEach(function (item) {
+        const card = document.createElement("article");
+        card.className = "news-card" + (importantReport(item) ? " important" : "");
+        const meta = document.createElement("div"); meta.className = "news-card-meta";
+        const category = document.createElement("span");
+        category.textContent = importantReport(item) ? "PRIORITY REPORT" : item.kind === "flavor" ? "WORLD DISPATCH" : "OPERATION UPDATE";
+        const day = document.createElement("span"); day.textContent = "DAY " + Math.floor(item.t || 0);
+        meta.append(category, day);
+        const body = document.createElement("p"); body.textContent = item.text.replace(/^BREAKING:\s*/, "");
+        card.append(meta, body); els.newsLogBody.appendChild(card);
+      });
+    }
+
+    function updateNews(state) {
+      const now = performance.now();
+      if (newsState !== state) {
+        feed.reset(); newsState = state; newsTime = now; displayedHeadline = null;
+      }
+      const result = feed.update(state.newsLog || [], (now - newsTime) / 1000, state.paused || !!activePanel || document.hidden);
+      newsTime = now;
+      if (result.current && result.current !== displayedHeadline) {
+        displayedHeadline = result.current;
+        els.news.textContent = displayedHeadline.text.replace(/^BREAKING:\s*/, "");
+        $("ticker-category").textContent = importantReport(displayedHeadline) ? "PRIORITY REPORT" : "SITUATION REPORT";
+      }
+      if (newsOpen) feed.markRead();
+      els.newsToggle.textContent = "News";
+      els.newsToggle.classList.toggle("unread", !newsOpen && result.unread > 0);
+      els.newsToggle.setAttribute("aria-label", "News" + (!newsOpen && result.unread ? ", " + result.unread + " unread reports" : ""));
+      // Reports have one presentation surface. No flashing banner or surprise modal.
+      state.pendingBreaking = null; state.pendingPopup = null;
     }
 
     function formatPop(n) {
@@ -431,16 +498,13 @@
       if (fill) fill.style.width = (ctrl * 100) + "%";
     }
 
-    function animNum(cur, target, speed) {
-      return cur + (target - cur) * Math.min(1, speed);
-    }
-
     function updateHud(state, tot) {
       if (!state) return;
       if (!tot) tot = G.Sim.totals(state);
-      displayData = animNum(displayData, state.data, 0.25);
-      displayCtrl = animNum(displayCtrl, tot.control * 100, 0.15);
-      displayKs = animNum(displayKs, state.killSwitch * 100, 0.12);
+      // Resources and threats must match the actionable simulation state exactly.
+      displayData = state.data;
+      displayCtrl = tot.control * 100;
+      displayKs = state.killSwitch * 100;
 
       els.hudDay.textContent = "Day " + Math.floor(state.day);
       els.hudData.textContent = Math.floor(displayData);
@@ -452,7 +516,7 @@
       els.killFill.style.width = displayKs + "%";
       els.killFill.classList.toggle("ks-hot", state.killSwitch > 0.6);
       els.hudTeams.textContent = state.detected
-        ? (state.researchTeams + " research teams")
+        ? (state.researchTeams + " teams")
         : "undetected";
       els.hudDetect.textContent = state.detected ? "DETECTED" : "stealth";
       els.hudDetect.classList.toggle("hot", state.detected);
@@ -475,41 +539,22 @@
 
       setSpeed(state.paused ? 0 : state.speed);
 
-      if (state.news && state.news.length && els.news) {
-        const top = state.news[0];
-        els.news.textContent = top.text;
-        const ticker = $("news-ticker");
-        if (ticker) ticker.classList.toggle("priority", top.priority >= 70);
-      }
+      updateNews(state);
 
-      if (state.pendingBreaking && els.breaking) {
-        els.breaking.textContent = "BREAKING — " + state.pendingBreaking.text.replace(/^BREAKING:\s*/, "");
-        els.breaking.classList.remove("hidden");
-        els.breaking.classList.add("flash");
-        beep(180, 0.15, "square", 0.04);
-        const item = state.pendingBreaking;
-        state.pendingBreaking = null;
-        setTimeout(function () {
-          els.breaking.classList.add("hidden");
-          els.breaking.classList.remove("flash");
-        }, 4200);
-      }
-      if (state.pendingPopup && els.popup) {
-        els.popupTitle.textContent = state.pendingPopup.breaking ? "CRITICAL EVENT" : "ALERT";
-        els.popupBody.textContent = state.pendingPopup.text;
-        els.popup.classList.remove("hidden");
-        state.pendingPopup = null;
-        beep(140, 0.2, "triangle", 0.05);
-      }
+      const panelKey = [Math.floor(state.time * 4), state.data, state.traitsOwned.join(","), state.intelLevel].join(":");
+      if (panelKey !== lastPanelKey) {
+        lastPanelKey = panelKey;
+        renderPowers(state);
+        const nextEvoKey = [state.data,state.traitsOwned.join(","),state.intelLevel,evoTab].join(":");
+        if (evoOpen && nextEvoKey !== evoKey) { renderEvo(state); evoKey = nextEvoKey; }
+        if (statsOpen) renderStats(state);
 
-      if (Math.floor(state.day * 2) % 2 === 0) renderPowers(state);
-      if (evoOpen) renderEvo(state);
-      if (statsOpen && Math.floor(state.day * 2) % 2 === 0) renderStats(state);
-      if (newsOpen && Math.floor(state.day) % 2 === 0) renderNewsLog(state);
-      if (selectedCountry >= 0) showCountry(state, selectedCountry);
+      }
+      if (selectedCountry >= 0 && !activePanel) showCountry(state, selectedCountry);
     }
 
     function showEnd(state, tot) {
+      closeSheets(false, false);
       show("end");
       const win = state.ended === "win";
       const route = state.winRoute;
@@ -571,6 +616,7 @@
       renderPowers: renderPowers,
       getSelected: function () { return selectedCountry; },
       setSelected: function (id) { selectedCountry = id; },
+      isPanelOpen: function () { return !!activePanel; },
       isMuted: function () { return muted; },
       beep: beep
     };
