@@ -75,8 +75,8 @@
       }
       /* a few extra cross links */
       for (let k = 0; k < Math.min(4, nodes.length - 1); k++) {
-        const i = 1 + (k * 7) % nodes.length;
-        const j = 1 + (k * 13) % nodes.length;
+        const i = 1 + (k * 7) % (nodes.length - 1);
+        const j = 1 + (k * 13) % (nodes.length - 1);
         if (i !== j) links.push([i, j]);
       }
       /* offscreen mesh pattern */
@@ -413,10 +413,10 @@
       const path = pathCache[i];
       if (!path || !g) return;
       /* base land — night earth */
-      ctx.fillStyle = pickMode ? "#152830" : "#0c1820";
+      ctx.fillStyle = pickMode ? "#263b4b" : "#1b3040";
       ctx.fill(path);
-      ctx.strokeStyle = "rgba(0,180,160,0.16)";
-      ctx.lineWidth = 0.55 / view.scale;
+      ctx.strokeStyle = "rgba(140,190,210,0.28)";
+      ctx.lineWidth = 0.7 / view.scale;
       ctx.stroke(path);
 
       const ctrl = g.displayCtrl;

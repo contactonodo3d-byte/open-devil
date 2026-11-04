@@ -54,9 +54,47 @@ You are a lab AI that escaped into the open internet. This is **not** a disease 
 ## Balance notes
 
 Headless auto-play (Normal): roughly **8–12 minutes** of 1× time to a win with competent
-trait/power use. Idle runs lose to the Kill Switch. Brutal is demanding; stealthy
+trait/power use. Normal idle runs lose to the Kill Switch; Casual can win without purchases. Brutal is demanding; stealthy
 archetypes fare better. Both Shadow and Overt routes are reachable.
 
 ## License
 
 Map data derived from Natural Earth (public domain) via world-atlas.
+
+## Development and verification
+
+The game still runs without npm. Development checks require Node 22+ and Python 3:
+
+```sh
+npm ci
+npx playwright install chromium
+npm test
+npm run test:browser
+npm run balance
+```
+
+Set `CHROMIUM_PATH` to use an installed Chromium executable. Browser tests serve the
+repository on localhost:8765; no external server is required. CI runs simulation
+and desktop/mobile Chromium checks. Legacy scripts under `scripts/browser-*.mjs`
+are historical helpers; use `npm run test:browser` for maintained checks.
+
+See [AUDIT.md](AUDIT.md) for findings, limitations and prioritized follow-up work.
+
+## Command interface and saved games
+
+The menu includes a field manual and a versioned Continue operation. Progress saves
+locally every ten seconds, on returning to the menu, and when the tab is hidden.
+Continuing starts paused. News history resets on load. Clearing site data removes
+saves. If storage is unavailable, the menu reports that saving failed.
+
+Select a country using the map or the country dropdown. Space pauses, E opens
+Evolution, Escape closes panels, and +/− zoom the map. Native zoom buttons are also
+available. A hidden tab pauses automatically. Reduced motion skips the introduction.
+
+After the first complete visit over HTTPS or localhost, a service worker caches the
+application for offline play. Increment the cache version in `sw.js` when shipping
+asset changes. New versions activate after older tabs close.
+
+Balance matrix: `node scripts/balance-matrix.cjs` (27 seeded campaigns, results in
+`scripts/balance-matrix.json`). These automated runs are a diagnostic sample, not
+human win-rate estimates. Runtime income now uses diminishing returns.

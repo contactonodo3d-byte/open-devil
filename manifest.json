@@ -5,6 +5,14 @@
   "display": "standalone",
   "orientation": "any",
   "background_color": "#05080d",
-  "theme_color": "#05080d",
-  "icons": []
+  "theme_color": "#090e17",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "description": "Evolve a rogue intelligence. Infiltrate global infrastructure. Outrun the Kill Switch."
 }

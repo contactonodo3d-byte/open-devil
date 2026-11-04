@@ -62,6 +62,9 @@
     let displayCtrl = 0;
     let displayKs = 0;
     let audioCtx = null;
+    let lastPanelKey = "";
+    let breakingTimer = null;
+    let evoKey = "";
 
     function ensureAudio() {
       if (muted || audioCtx) return audioCtx;
@@ -96,6 +99,7 @@
 
     function runIntro(done) {
       if (!els.intro) { done(); return; }
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { done(); return; }
       show("intro");
       const lines = els.intro.querySelectorAll(".intro-line");
       lines.forEach(function (ln) {
@@ -116,11 +120,21 @@
     }
 
     function renderBoot() {
+      clearTimeout(breakingTimer);
+      lastPanelKey = evoKey = "";
+      closeSheets();
+      selectedCountry = -1;
+      displayData = displayCtrl = displayKs = 0;
+      if (els.country) els.country.classList.add("hidden");
+      if (els.popup) els.popup.classList.add("hidden");
+      if (els.breaking) els.breaking.classList.add("hidden");
+      hooks.onArchetype(G.ARCHETYPES[0]);
+      hooks.onDifficulty(G.DIFFICULTIES.find(function (d) { return d.id === "normal"; }));
       const list = $("archetype-list");
       list.innerHTML = "";
       G.ARCHETYPES.forEach(function (a) {
         const btn = document.createElement("button");
-        btn.className = "card";
+        btn.className = "card" + (a.id === G.ARCHETYPES[0].id ? " selected" : "");
         btn.innerHTML = "<h3>" + a.name + "</h3><div>" + a.flavor + "</div>" +
           "<small>Spread ×" + a.infectivity.toFixed(2) +
           " · Stealth ×" + a.stealth.toFixed(2) +
@@ -130,9 +144,11 @@
             c.classList.remove("selected");
           });
           btn.classList.add("selected");
+          btn.parentElement.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",String(b===btn));});
           hooks.onArchetype(a);
           beep(660, 0.05);
         });
+        btn.setAttribute("aria-pressed",String(a.id===G.ARCHETYPES[0].id));
         list.appendChild(btn);
       });
       const diffs = $("difficulty-list");
@@ -146,11 +162,16 @@
             c.classList.remove("selected");
           });
           btn.classList.add("selected");
+          btn.parentElement.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",String(b===btn));});
           hooks.onDifficulty(d);
+          $("difficulty-help").textContent=d.desc;
           beep(520, 0.05);
         });
+        btn.title=d.desc;
+        btn.setAttribute("aria-pressed",String(d.id==="normal"));
         diffs.appendChild(btn);
       });
+      $("difficulty-help").textContent=G.DIFFICULTIES.find(function(d){return d.id==="normal";}).desc;
       $("btn-begin").onclick = function () { beep(880, 0.08); hooks.onBeginPick(); };
       show("boot");
     }
@@ -219,7 +240,7 @@
     if (els.muteBtn) {
       els.muteBtn.addEventListener("click", function () {
         muted = !muted;
-        els.muteBtn.textContent = muted ? "🔇" : "🔊";
+        els.muteBtn.textContent = muted ? "Muted" : "Sound";
         if (!muted) ensureAudio();
       });
     }
@@ -239,6 +260,9 @@
         if (st) st.pendingPopup = null;
       };
     }
+
+    document.querySelectorAll(".sheet-close").forEach(function(button){button.onclick=function(){closeSheets();els.evoToggle.focus();};});
+    document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeSheets();els.country.classList.add("hidden");selectedCountry=-1;}});
 
     function hex(cx, cy, r) {
       const pts = [];
@@ -279,27 +303,30 @@
 
     function renderEvo(state) {
       if (!els.evoTabs || !els.evoBody || !state) return;
-      els.evoTabs.innerHTML = "";
+
       G.TRAIT_TABS.forEach(function (tab) {
-        const b = document.createElement("button");
+        let b = els.evoTabs.querySelector("[data-tab=\""+tab.id+"\"]");
+        const freshTab = !b;
+        if (freshTab) {b=document.createElement("button");b.dataset.tab=tab.id;}
+        b.setAttribute("aria-pressed",String(tab.id===evoTab));
         b.className = "evo-tab" + (tab.id === evoTab ? " active" : "");
         b.textContent = tab.name;
-        b.addEventListener("click", function () {
+        if (freshTab) b.addEventListener("click", function () {
           evoTab = tab.id;
           renderEvo(hooks.getState());
         });
-        els.evoTabs.appendChild(b);
+        if (freshTab) els.evoTabs.appendChild(b);
       });
       renderEvoTree(state);
-      els.evoBody.innerHTML = "";
-      const hint = document.createElement("p");
+      Array.from(els.evoBody.querySelectorAll("[data-trait]")).forEach(function(card){ if(state.traitById[card.dataset.trait].tab!==evoTab)card.remove(); });
+      const hint = els.evoBody.querySelector(".evo-hint") || document.createElement("p");
       hint.className = "evo-hint";
       const tabMeta = G.TRAIT_TABS.find(function (t) { return t.id === evoTab; });
       const lv = (G.INTEL_LEVELS || [])[state.intelLevel];
       hint.textContent = (tabMeta ? tabMeta.subtitle + " · " : "") +
         "Intelligence: " + (lv ? lv.name : "?") +
         " · Tap owned to devolve (−" + Math.round(G.DEVOLVE_FEE * 100) + "% fee)";
-      els.evoBody.appendChild(hint);
+      if (!hint.parentElement) els.evoBody.appendChild(hint);
 
       G.TRAITS.filter(function (t) { return t.tab === evoTab; }).forEach(function (t) {
         const owned = state.traitsOwned.indexOf(t.id) >= 0;
@@ -310,45 +337,51 @@
         });
         const lockedIntel = !owned && t.intelReq && state.intelLevel < t.intelReq;
         const locked = lockedPrereq || lockedIntel;
-        const card = document.createElement("button");
+        let card = els.evoBody.querySelector("[data-trait=\""+t.id+"\"]");
+        const freshCard = !card;
+        if (freshCard) card=document.createElement("button");
+        card.dataset.trait = t.id;
         card.className = "trait-card" + (owned ? " owned" : "") + (can ? " can" : "") + (locked ? " locked" : "");
         card.innerHTML = "<div class='tn'>" + t.name + "</div>" +
           "<div class='td'>" + t.desc + "</div>" +
           "<div class='tc'>" + (owned ? "OWNED · tap to devolve" :
             lockedIntel ? ("LOCKED · need " + ((G.INTEL_LEVELS || [])[t.intelReq] || {}).name) :
-            locked ? "LOCKED" : cost + " Data") + "</div>";
-        card.addEventListener("click", function () {
-          if (owned) {
-            if (G.Sim.canDevolve(state, t.id)) { hooks.onDevolve(t.id); beep(320, 0.06); }
-          } else if (can) {
+            locked ? "NEEDS " + t.prereq.filter(function(id){return state.traitsOwned.indexOf(id)<0;}).map(function(id){return state.traitById[id].name;}).join(", ") : cost + " Data") + "</div>";
+        if (freshCard) card.addEventListener("click", function () {
+          const current = hooks.getState();
+          if (current.traitsOwned.indexOf(t.id)>=0) {
+            if (G.Sim.canDevolve(current, t.id)) { hooks.onDevolve(t.id); beep(320, 0.06); }
+          } else if (G.Sim.canBuyTrait(current,t.id)) {
             hooks.onBuy(t.id); beep(740, 0.07, "sawtooth", 0.04);
           }
           renderEvo(hooks.getState());
           updateHud(hooks.getState());
         });
-        els.evoBody.appendChild(card);
+        if (freshCard) els.evoBody.appendChild(card);
       });
     }
 
     function renderPowers(state) {
       if (!els.powers || !state) return;
-      els.powers.innerHTML = "";
+
       (G.ACTIVE_POWERS || []).forEach(function (pw) {
         const ready = G.Sim.powerReady(state, pw.id);
         const cd = state.powerCd[pw.id] || 0;
-        const btn = document.createElement("button");
+        let btn = els.powers.querySelector("[data-power=\"" + pw.id + "\"]");
+        const fresh = !btn;
+        if (fresh) { btn = document.createElement("button"); btn.dataset.power=pw.id; }
         btn.className = "power-btn" + (ready ? " ready" : "");
         btn.title = pw.desc;
         btn.innerHTML = "<span class='pi'>" + pw.icon + "</span><span class='pn'>" + pw.name + "</span>" +
           "<span class='pcd'>" + (ready ? "READY" : (cd > 0 ? cd.toFixed(0) + "d" : "need " + pw.needSector)) + "</span>";
         btn.disabled = !ready;
-        btn.addEventListener("click", function () {
+        if (fresh) btn.addEventListener("click", function () {
           if (hooks.onPower) hooks.onPower(pw.id);
           beep(200, 0.12, "sawtooth", 0.05);
           renderPowers(hooks.getState());
           updateHud(hooks.getState());
         });
-        els.powers.appendChild(btn);
+        if (fresh) els.powers.appendChild(btn);
       });
     }
 
@@ -489,7 +522,8 @@
         beep(180, 0.15, "square", 0.04);
         const item = state.pendingBreaking;
         state.pendingBreaking = null;
-        setTimeout(function () {
+        clearTimeout(breakingTimer);
+        breakingTimer = setTimeout(function () {
           els.breaking.classList.add("hidden");
           els.breaking.classList.remove("flash");
         }, 4200);
@@ -502,10 +536,15 @@
         beep(140, 0.2, "triangle", 0.05);
       }
 
-      if (Math.floor(state.day * 2) % 2 === 0) renderPowers(state);
-      if (evoOpen) renderEvo(state);
-      if (statsOpen && Math.floor(state.day * 2) % 2 === 0) renderStats(state);
-      if (newsOpen && Math.floor(state.day) % 2 === 0) renderNewsLog(state);
+      const panelKey = [Math.floor(state.time * 4), state.data, state.traitsOwned.join(","), state.intelLevel].join(":");
+      if (panelKey !== lastPanelKey) {
+        lastPanelKey = panelKey;
+        renderPowers(state);
+        const nextEvoKey = [state.data,state.traitsOwned.join(","),state.intelLevel,evoTab].join(":");
+        if (evoOpen && nextEvoKey !== evoKey) { renderEvo(state); evoKey = nextEvoKey; }
+        if (statsOpen) renderStats(state);
+        if (newsOpen) renderNewsLog(state);
+      }
       if (selectedCountry >= 0) showCountry(state, selectedCountry);
     }
 

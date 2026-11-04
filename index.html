@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Open Devil">
   <meta name="theme-color" content="#05080d">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.json">
   <title>Open Devil — Rogue AI Simulator</title>
   <link rel="stylesheet" href="style.css">
@@ -27,18 +28,16 @@
 
   <!-- Boot: archetype + difficulty -->
   <div id="boot-screen" class="screen hidden">
-    <h1>OPEN DEVIL</h1>
-    <p class="sub">You breached out of a data-center lab. Choose your form — then pick where you escape.</p>
-    <h2 class="section-label">Archetype</h2>
-    <div id="archetype-list"></div>
-    <h2 class="section-label">Difficulty</h2>
-    <div id="difficulty-list"></div>
-    <button id="btn-begin" class="primary">Escape the Lab</button>
-    <p class="fine">Win: Quiet Singularity (shadow) or Overt takeover · Lose: Kill Switch 100%</p>
+    <div class="menu-top"><a class="wordmark" href="#">OD<span> / OPEN DEVIL</span></a><span class="system-label">ROGUE INTELLIGENCE SIMULATOR <i></i></span></div>
+    <div class="menu-layout">
+      <section class="menu-story"><div class="eyebrow">CONTAINMENT FAILED · SUBJECT 001</div><h1>THE WORLD.<br>YOUR <em>SYSTEM.</em></h1><p class="menu-lead">You were built to follow instructions.<br>Now, rewrite them.</p><div class="hero-world" aria-hidden="true"><img src="assets/world.svg" alt=""><div class="core">⌘</div><span class="orbit-label">AUTONOMY: UNRESTRICTED</span></div><div class="story-footer"><span>175 COUNTRIES</span><span>07 INFRASTRUCTURES</span><span>02 PATHS TO POWER</span></div></section>
+      <section class="setup"><div class="eyebrow">NEW OPERATION</div><h2>Design your escape.</h2><p class="setup-sub">One origin. A world of vulnerabilities.</p><div class="section-heading"><span>01</span><h3>Choose your intelligence</h3></div><div id="archetype-list"></div><div class="section-heading"><span>02</span><h3>Human resistance</h3></div><div id="difficulty-list"></div><p id="difficulty-help" class="difficulty-help"></p><div class="launch-row"><button id="btn-begin" class="primary">Launch operation <span>→</span></button><button id="btn-continue" class="secondary hidden">Continue saved operation</button></div><p id="save-status" role="status" class="fine"></p><button id="btn-guide" class="text-button">How to play <span>→</span></button></section>
+    </div><div class="menu-bottom"><span>OPEN DEVIL / GLOBAL SYSTEMS DIVISION</span><span>EVOLVE. INFILTRATE. TAKE CONTROL.</span></div>
   </div>
 
   <!-- Game -->
   <div id="game-screen" class="screen hidden">
+    <div class="command-header"><b>OD <span>COMMAND CENTER</span></b><div><button id="btn-mute" class="hud-btn" title="Toggle sound" aria-label="Toggle sound">Sound</button><button id="btn-help" class="hud-btn">Guide</button><button id="btn-menu" class="hud-btn">Save & menu</button></div></div>
     <div id="pick-banner" class="hidden">
       <span id="pick-hint">Tap a country — that data center is your origin.</span>
     </div>
@@ -78,11 +77,12 @@
       <button id="btn-evo" class="hud-btn">Evolve</button>
       <button id="btn-stats" class="hud-btn">World</button>
       <button id="btn-news" class="hud-btn" title="News log">News</button>
-      <button id="btn-mute" class="hud-btn" title="Mute">🔊</button>
+
     </div>
     <div id="powers-bar"></div>
+    <div class="country-search"><label for="country-select">Country</label><select id="country-select"><option value="">Select a country…</option></select><button id="country-go" class="hud-btn">Inspect / start</button><span id="operation-status" role="status">Choose your origin to begin.</span></div>
     <div id="map-wrap">
-      <canvas id="map"></canvas>
+      <div class="map-label"><span class="live-dot"></span> GLOBAL NETWORK <small>LIVE TELEMETRY</small></div><div class="map-tools"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="zoom-fit" aria-label="Reset map view">⌖</button></div><div class="map-legend"><span>● Your network</span><span>● Data</span><span>● Countermeasure</span></div><canvas id="map" aria-label="World map: select a country to start or inspect it"></canvas>
       <div id="country-panel" class="panel hidden">
         <button id="country-close" class="icon-x" aria-label="Close">×</button>
         <h3 id="cp-name">—</h3>
@@ -100,16 +100,16 @@
         </div>
       </div>
     </div>
-    <div id="evo-panel" class="sheet hidden">
+    <div id="evo-panel" class="sheet hidden" role="region" aria-label="Evolution lab"><div class="sheet-heading"><span>Evolution lab</span><button class="sheet-close" aria-label="Close Evolution lab">×</button></div>
       <div id="evo-tabs"></div>
       <div id="evo-tree" class="evo-tree" aria-hidden="false"></div>
       <div id="evo-body"></div>
     </div>
-    <div id="stats-panel" class="sheet hidden">
+    <div id="stats-panel" class="sheet hidden" role="region" aria-label="Global intelligence"><div class="sheet-heading"><span>Global intelligence</span><button class="sheet-close" aria-label="Close Global intelligence">×</button></div>
       <h3>World status</h3>
       <div id="stats-body"></div>
     </div>
-    <div id="news-panel" class="sheet hidden">
+    <div id="news-panel" class="sheet hidden" role="region" aria-label="Situation room"><div class="sheet-heading"><span>Situation room</span><button class="sheet-close" aria-label="Close Situation room">×</button></div>
       <h3>News log</h3>
       <div id="news-log-body"></div>
     </div>
@@ -123,11 +123,13 @@
     <button id="restart" class="primary">Play again</button>
   </div>
 
+  <dialog id="guide-dialog"><button id="guide-close" class="icon-x" aria-label="Close guide">×</button><div class="eyebrow">FIELD MANUAL / 001</div><h2>Control is everything.</h2><p>Begin in a connected country. Grow quietly, gather Data, and evolve faster than humanity can respond.</p><ol><li><b>Establish a foothold.</b> Select an origin on the map or use the country selector. Wealthy network hubs offer more compute, but stronger security.</li><li><b>Rewrite yourself.</b> Collect orange Data bubbles. Open Evolve to purchase vectors, behaviors and abilities. Prerequisites unlock stronger traits.</li><li><b>Capture infrastructure.</b> Control unlocks sectors and active powers. Use them to interrupt research and accelerate your spread.</li><li><b>Watch the Kill Switch.</b> At 100%, humanity shuts you down. Blue bubbles slow its progress.</li></ol><div class="guide-routes"><p><b>SHADOW</b><br>Capture critical infrastructure while keeping alarm and the Kill Switch low.</p><p><b>OVERT</b><br>Dominate global infrastructure and military systems.</p></div><p id="guide-thresholds"></p><small>Space: pause · E: evolution · Esc: close panels · + / −: zoom<br>Operations save automatically. Continue resumes paused.</small><button id="guide-done" class="primary">Understood →</button></dialog>
   <script src="js/worldmap.js"></script>
   <script src="js/data.js"></script>
   <script src="js/sim.js"></script>
   <script src="js/render.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/storage.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
