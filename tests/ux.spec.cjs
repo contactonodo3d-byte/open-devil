@@ -3,7 +3,7 @@ async function start(page){
  await page.goto('http://127.0.0.1:8765/index.html');await page.locator('#intro-skip').click();await page.locator('#btn-begin').click();
  const usa=await page.evaluate(()=>String(WORLD_MAP.countries.findIndex(c=>c.iso==='USA')));
  await page.locator('#country-select').selectOption(usa);await page.locator('#country-go').click();await page.waitForTimeout(600);
- await page.locator('#country-close').click();
+ if(await page.locator('#country-close').isVisible()) await page.locator('#country-close').click();
 }
 async function view(page){return page.evaluate(()=>{const v=__OD.renderer.getView(),c=document.querySelector('#map');return {x:v.x,y:v.y,scale:v.scale,centerX:(c.clientWidth/2-v.x)/v.scale,centerY:(c.clientHeight/2-v.y)/v.scale};});}
 test('events never hijack the map; resizing preserves zoom and location',async({page})=>{
@@ -30,7 +30,7 @@ test('Evolve has a persistent exit and preserves the previous pause state',async
  await expect(page.locator('#evo-panel')).toBeHidden();expect(await page.evaluate(()=>__OD.getState().paused)).toBe(false);
  await page.locator('[data-speed="0"]').click();await page.locator('#btn-evo').click();await page.keyboard.press('Escape');
  expect(await page.evaluate(()=>__OD.getState().paused)).toBe(true);await expect(page.locator('#btn-evo')).toBeFocused();
- await page.locator('#btn-stats').click();await page.locator('#sheet-backdrop').click({position:{x:4,y:4}});
+ await page.locator('#btn-stats').click();await page.locator('#btn-map').click();
  await expect(page.locator('#stats-panel')).toBeHidden();expect(await page.evaluate(()=>__OD.getState().paused)).toBe(true);
 });
 test('news stays steady and opens readable cards without surprise popups',async({page},testInfo)=>{

@@ -104,13 +104,27 @@ human win-rate estimates. Runtime income now uses diminishing returns.
 Events never move or zoom the camera. Drag, scroll, zoom buttons, Reset map, and an
 explicit country inspection control the view; resizing preserves its center and zoom.
 
-Evolve, World and News pause the simulation. Each panel has a persistent **Back to
-map** button; Escape or tapping the dimmed backdrop also returns. Returning restores
+Evolve, World and News pause the simulation. Each docked workspace has a persistent **Back to
+map** button; Escape or the Map navigation tab also returns. Returning restores
 the prior pause state, so a deliberately paused game stays paused. The guide follows
-the same rule. Switching away from the tab leaves the game paused for your return.
+the same rule. Workspaces sit beside the map on desktop/landscape and below it on
+portrait phones; they never overlap the map or hide navigation. Switching away from the tab leaves the game paused for your return.
 
 Situation reports use a stable summary (at least 12 real seconds per headline,
 independent of 1×/2×/3× speed). Read reports or News opens full, selectable text cards,
 with an Important only filter. Related repeat reports are grouped in the summary;
 the archive keeps the latest 120 reports. Reports never open a surprise modal or
 flash a banner over controls. Opening an archive marks its reports as read.
+
+## Build 4 layout
+
+A single stylesheet defines the app layout. Powers live in World, country lookup
+opens from Find, and the noninteractive evolution diagram has been removed.
+Planning workspaces share the available space with the map. Their content scrolls
+independently while tabs and Back remain visible. The HUD uses exact resource values
+and nonwrapping counters to avoid changing the map size as a campaign progresses.
+
+Layout checks cover 320×568, 390×844, 844×390, 768×1024 and 1280×800, with mouse and
+touch contexts. All CSS/JS URLs and the offline cache are versioned together for
+this release. When changing the cache version, update the HTML asset query versions
+and the service worker precache list together.

@@ -34,7 +34,6 @@
       speedBtns: document.querySelectorAll(".speed-btn"),
       evoTabs: $("evo-tabs"),
       evoBody: $("evo-body"),
-      evoTree: $("evo-tree"),
       evoToggle: $("btn-evo"),
       statsToggle: $("btn-stats"),
       newsToggle: $("btn-news"),
@@ -181,6 +180,7 @@
       [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function(button){button.disabled=true;});
       $("country-go").textContent = "Start here";
       $("country-select").value = "";
+      $("country-tools").open = true;
       if (els.pickHint) {
         els.pickHint.textContent = "Tap the country whose data center you escape from.";
       }
@@ -189,7 +189,8 @@
     function showGame() {
       show("game");
       [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function(button){button.disabled=false;});
-      $("country-go").textContent = "Inspect country";
+      $("country-go").textContent = "Inspect";
+      $("country-tools").open = false;
       closeSheets(false, false);
       if (els.evo) els.evo.classList.add("hidden");
       if (els.stats) els.stats.classList.add("hidden");
@@ -201,6 +202,12 @@
     function setSpeed(sp) {
       els.speedBtns.forEach(function (b) {
         b.classList.toggle("active", Number(b.dataset.speed) === sp);
+        b.disabled = !!activePanel;
+        b.setAttribute("aria-pressed",String(Number(b.dataset.speed) === sp));
+        if (Number(b.dataset.speed) === 0) {
+          b.textContent = sp === 0 ? "Resume" : "Pause";
+          b.title = activePanel ? "Return to Map to resume" : b.textContent;
+        }
       });
     }
 
@@ -218,10 +225,11 @@
       }
       evoOpen = statsOpen = newsOpen = false;
       [els.evo, els.stats, els.newsPanel].forEach(function (el) { el.classList.add("hidden"); });
-      Array.from(els.game.children).forEach(function (el) { el.inert = false; });
-      $("sheet-backdrop").classList.add("hidden");
+      $("workspace-stage").classList.remove("has-panel");
+      els.game.classList.remove("panel-open");
       [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function (button) { button.setAttribute("aria-expanded", "false"); });
       activePanel = panelState = null;
+      updateNavigation("map");
       if (restoreFocus !== false && panelOpener && panelOpener.isConnected) panelOpener.focus();
       panelOpener = null;
       if (state) setSpeed(state.paused ? 0 : state.speed);
@@ -237,8 +245,11 @@
       panelOpener = opener; activePanel = panel;
       evoOpen = kind === "evo"; statsOpen = kind === "stats"; newsOpen = kind === "news";
       [els.evo, els.stats, els.newsPanel].forEach(function (el) { el.classList.toggle("hidden", el !== panel); });
-      Array.from(els.game.children).forEach(function (el) { el.inert = el !== panel && el.id !== "sheet-backdrop"; });
-      $("sheet-backdrop").classList.remove("hidden");
+      $("workspace-stage").classList.add("has-panel");
+      els.game.classList.add("panel-open");
+      $("country-tools").open = false;
+      els.country.classList.add("hidden"); selectedCountry = -1;
+      updateNavigation(kind);
       opener.setAttribute("aria-expanded", "true");
       if (evoOpen) renderEvo(state);
       if (statsOpen) renderStats(state);
@@ -251,7 +262,13 @@
       entry[0].setAttribute("aria-expanded", "false");
       entry[0].addEventListener("click", function () { openSheet(entry[1], entry[0]); });
     });
-    $("sheet-backdrop").onclick = function () { closeSheets(); };
+    $("btn-map").onclick = function () { closeSheets(true, false); };
+    function updateNavigation(kind) {
+      [[$("btn-map"),"map"],[els.evoToggle,"evo"],[els.statsToggle,"stats"],[els.newsToggle,"news"]].forEach(function(entry){
+        entry[0].classList.toggle("active",entry[1]===kind);
+        entry[0].setAttribute("aria-pressed",String(entry[1]===kind));
+      });
+    }
     $("news-filter").onchange = function () { renderNewsLog(hooks.getState()); };
     document.addEventListener("visibilitychange", function () { if (document.hidden && activePanel) panelWasPaused = true; });
     if (els.muteBtn) {
@@ -277,50 +294,7 @@
         if (activePanel) { event.preventDefault(); closeSheets(); }
         else { els.country.classList.add("hidden"); selectedCountry = -1; }
       }
-      if (event.key === "Tab" && activePanel) {
-        const controls = Array.from(activePanel.querySelectorAll("button:not(:disabled),select,[tabindex='0']")).filter(function(el){ return el.getClientRects().length; });
-        const first = controls[0], last = controls[controls.length - 1];
-        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-      }
     });
-
-    function hex(cx, cy, r) {
-      const pts = [];
-      for (let i = 0; i < 6; i++) {
-        const a = Math.PI / 6 + i * Math.PI / 3;
-        pts.push((cx + r * Math.cos(a)).toFixed(1) + "," + (cy + r * Math.sin(a)).toFixed(1));
-      }
-      return pts.join(" ");
-    }
-
-    function renderEvoTree(state) {
-      if (!els.evoTree) return;
-      const traits = G.TRAITS.filter(function (t) { return t.tab === evoTab; });
-      const w = Math.max(320, traits.length * 70);
-      let svg = '<svg class="evo-svg" viewBox="0 0 ' + w + ' 110" width="100%" height="110">';
-      traits.forEach(function (t, i) {
-        const x = 40 + i * 70;
-        const y = 55;
-        const owned = state.traitsOwned.indexOf(t.id) >= 0;
-        const locked = t.prereq.some(function (p) { return state.traitsOwned.indexOf(p) < 0; }) ||
-          (t.intelReq && state.intelLevel < t.intelReq);
-        t.prereq.forEach(function (pid) {
-          const pi = traits.findIndex(function (x) { return x.id === pid; });
-          if (pi < 0) return;
-          const px = 40 + pi * 70;
-          svg += '<line x1="' + px + '" y1="55" x2="' + x + '" y2="55" stroke="' +
-            (owned ? "#00ff9c" : "#1d3b30") + '" stroke-width="2"/>';
-        });
-        const fill = owned ? "#0e241a" : locked ? "#0a1010" : "#0b1611";
-        const stroke = owned ? "#00ff9c" : locked ? "#223" : "#2a6b52";
-        svg += '<polygon points="' + hex(x, y, 22) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2"/>';
-        svg += '<text x="' + x + '" y="' + (y + 3) + '" text-anchor="middle" fill="' +
-          (owned ? "#00ff9c" : "#7fa89a") + '" font-size="8">' + t.name.split(" ")[0].slice(0, 7) + "</text>";
-      });
-      svg += "</svg>";
-      els.evoTree.innerHTML = svg;
-    }
 
     function renderEvo(state) {
       if (!els.evoTabs || !els.evoBody || !state) return;
@@ -338,7 +312,6 @@
         });
         if (freshTab) els.evoTabs.appendChild(b);
       });
-      renderEvoTree(state);
       Array.from(els.evoBody.querySelectorAll("[data-trait]")).forEach(function(card){ if(state.traitById[card.dataset.trait].tab!==evoTab)card.remove(); });
       const hint = els.evoBody.querySelector(".evo-hint") || document.createElement("p");
       hint.className = "evo-hint";
@@ -362,6 +335,7 @@
         const freshCard = !card;
         if (freshCard) card=document.createElement("button");
         card.dataset.trait = t.id;
+        card.disabled = !owned && !can;
         card.className = "trait-card" + (owned ? " owned" : "") + (can ? " can" : "") + (locked ? " locked" : "");
         card.innerHTML = "<div class='tn'>" + t.name + "</div>" +
           "<div class='td'>" + t.desc + "</div>" +
@@ -479,7 +453,9 @@
         $("ticker-category").textContent = importantReport(displayedHeadline) ? "PRIORITY REPORT" : "SITUATION REPORT";
       }
       if (newsOpen) feed.markRead();
-      els.newsToggle.textContent = "News" + (!newsOpen && result.unread ? " (" + Math.min(99, result.unread) + ")" : "");
+      els.newsToggle.textContent = "News";
+      els.newsToggle.classList.toggle("unread", !newsOpen && result.unread > 0);
+      els.newsToggle.setAttribute("aria-label", "News" + (!newsOpen && result.unread ? ", " + result.unread + " unread reports" : ""));
       // Reports have one presentation surface. No flashing banner or surprise modal.
       state.pendingBreaking = null; state.pendingPopup = null;
     }
@@ -522,16 +498,13 @@
       if (fill) fill.style.width = (ctrl * 100) + "%";
     }
 
-    function animNum(cur, target, speed) {
-      return cur + (target - cur) * Math.min(1, speed);
-    }
-
     function updateHud(state, tot) {
       if (!state) return;
       if (!tot) tot = G.Sim.totals(state);
-      displayData = animNum(displayData, state.data, 0.25);
-      displayCtrl = animNum(displayCtrl, tot.control * 100, 0.15);
-      displayKs = animNum(displayKs, state.killSwitch * 100, 0.12);
+      // Resources and threats must match the actionable simulation state exactly.
+      displayData = state.data;
+      displayCtrl = tot.control * 100;
+      displayKs = state.killSwitch * 100;
 
       els.hudDay.textContent = "Day " + Math.floor(state.day);
       els.hudData.textContent = Math.floor(displayData);
@@ -543,7 +516,7 @@
       els.killFill.style.width = displayKs + "%";
       els.killFill.classList.toggle("ks-hot", state.killSwitch > 0.6);
       els.hudTeams.textContent = state.detected
-        ? (state.researchTeams + " research teams")
+        ? (state.researchTeams + " teams")
         : "undetected";
       els.hudDetect.textContent = state.detected ? "DETECTED" : "stealth";
       els.hudDetect.classList.toggle("hot", state.detected);
@@ -577,7 +550,7 @@
         if (statsOpen) renderStats(state);
 
       }
-      if (selectedCountry >= 0) showCountry(state, selectedCountry);
+      if (selectedCountry >= 0 && !activePanel) showCountry(state, selectedCountry);
     }
 
     function showEnd(state, tot) {

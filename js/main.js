@@ -48,7 +48,7 @@
       document.getElementById("pick-banner").classList.remove("hidden");
     },
     onSpeed: function (sp) {
-      if (!state || mode !== "play") return;
+      if (!state || mode !== "play" || ui.isPanelOpen()) return;
       if (sp === 0) {
         state.paused = !state.paused;
         if (!state.paused && state.speed === 0) state.speed = 1;
@@ -172,7 +172,6 @@
         state.paused = false;
         document.getElementById("pick-banner").classList.add("hidden");
         ui.showGame();
-        ui.showCountry(state, id);
         ui.updateHud(state);
         ui.beep(520, 0.1);
       }
@@ -248,7 +247,7 @@
     state = saved; mode = "play"; accumulator = 0;
     renderer.setMap(window.WORLD_MAP); ui.showGame(); renderer.resize(); renderer.resetView();
     document.getElementById("pick-banner").classList.add("hidden");
-    ui.updateHud(state); ui.showCountry(state, state.startCountry);
+    ui.updateHud(state);
   };
   document.getElementById("btn-menu").onclick = function () {
     const saved = window.SaveGame.write(state);
@@ -263,11 +262,14 @@
   document.getElementById("country-go").onclick = function () {
     if (!state || select.value === "") return;
     const id = Number(select.value), c = state.world.countries[id];
-    if (mode === "pick" && window.Sim.startInCountry(state,id)) {
+    const choosingOrigin = mode === "pick";
+    if (choosingOrigin && window.Sim.startInCountry(state,id)) {
       mode="play";state.paused=false;state.speed=1;
       document.getElementById("pick-banner").classList.add("hidden"); ui.showGame();
     }
-    ui.showCountry(state,id);ui.updateHud(state);
+    document.getElementById("country-tools").open = false;
+    if (!choosingOrigin) ui.showCountry(state,id);
+    ui.updateHud(state);
     renderer.focusOn(c.centroid[0],c.centroid[1],renderer.getView().scale,0.4);
   };
   function zoom(factor) { renderer.zoomAt(canvas.clientWidth/2,canvas.clientHeight/2,factor); }

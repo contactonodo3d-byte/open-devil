@@ -103,3 +103,25 @@ Las regresiones verifican estabilidad de cámara con eventos, redimensionamiento
 pan manual, salida visible tras hacer scroll en Evolve, conservación de pausa,
 lectura de noticias y un recorrido con compra mediante la UI, eventos naturales de
 mitad de partida acelerados mediante pasos de simulación, guía y retorno al mapa.
+
+## Build 4: layout estructural y entrega
+
+La revisión detectó que la versión pública seguía en el commit original y que los
+paneles modales de la rama de trabajo podían ocupar casi toda la altura móvil.
+Se reemplazó esa estructura por un área dividida: mapa + panel lateral en escritorio
+y landscape; mapa + panel inferior acotado en portrait. La navegación Map/Evolve/
+World/News permanece disponible, con cambio directo entre paneles y retorno a Map.
+Los paneles ya no son modales, no oscurecen toda la pantalla ni bloquean el foco.
+
+Se consolidó CSS en una sola definición de layout, se movieron poderes a World y
+búsqueda de países a Find, se quitó el diagrama decorativo de evolución y la ficha
+que aparecía automáticamente al iniciar. El HUD muestra cantidades exactas: el
+contador animado podía quedar una unidad por debajo. Se impide que Day 30 o textos
+de investigación cambien la altura del HUD por wrapping.
+
+24 escenarios de navegador cubren recorrido de juego, offline y geometría en cinco
+tamaños: 320×568, 390×844, 844×390, 768×1024 y 1280×800. Las pruebas verifican que el
+mapa y el panel no se solapen, que los cuerpos tengan scroll utilizable y que Back
+y la navegación permanezcan visibles. Nueve pruebas Node cubren simulación/guardado/
+noticias. CSS/JS, precache y build visible comparten versión 4 para evitar mezclar
+HTML nuevo con scripts almacenados de una entrega anterior.
