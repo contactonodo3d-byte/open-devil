@@ -21,6 +21,8 @@
     let dataHudEl = null;
 
     function setMap(map) {
+      camAnim = null;
+      particles = []; floaters = []; ripples = []; glyphs = [];
       mapW = map.w; mapH = map.h;
       pathCache.length = 0;
       countryGfx.length = 0;
@@ -160,17 +162,26 @@
 
     function resize() {
       const parent = canvas.parentElement || document.body;
-      cssW = parent.clientWidth || window.innerWidth;
-      cssH = parent.clientHeight || window.innerHeight;
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = parent.clientWidth, height = parent.clientHeight;
+      if (!width || !height) return;
+      const nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (width === cssW && height === cssH && nextDpr === dpr) return;
+      const center = cssW && cssH ? screenToWorld(cssW / 2, cssH / 2) : null;
+      cssW = width; cssH = height; dpr = nextDpr;
       canvas.width = Math.max(1, Math.floor(cssW * dpr));
       canvas.height = Math.max(1, Math.floor(cssH * dpr));
       canvas.style.width = cssW + "px";
       canvas.style.height = cssH + "px";
-      fit();
+      camAnim = null;
+      if (!center) { fit(); return; }
+      // Layout changes preserve the player's location and zoom.
+      view.minScale = Math.min(cssW * 0.92 / mapW, cssH * 0.92 / mapH) * 0.85;
+      view.x = cssW / 2 - center[0] * view.scale;
+      view.y = cssH / 2 - center[1] * view.scale;
     }
 
     function fit() {
+      camAnim = null;
       if (!cssW || !cssH) return;
       const pad = 0.92;
       const sx = (cssW * pad) / mapW;
@@ -187,8 +198,9 @@
     function screenToWorld(sx, sy) {
       return [(sx - view.x) / view.scale, (sy - view.y) / view.scale];
     }
-    function pan(dx, dy) { view.x += dx; view.y += dy; }
+    function pan(dx, dy) { camAnim = null; view.x += dx; view.y += dy; }
     function zoomAt(sx, sy, factor) {
+      camAnim = null;
       const before = screenToWorld(sx, sy);
       view.scale = Math.max(view.minScale, Math.min(view.maxScale, view.scale * factor));
       const after = screenToWorld(sx, sy);
@@ -292,7 +304,7 @@
             g.flash = 1.2;
             g.glitch = 0.8;
             addRipple(c.centroid[0], c.centroid[1], fx.type === "fall" ? "rgba(255,80,120,0.8)" : "rgba(0,255,220,0.85)");
-            if (!camAnim) focusOn(c.centroid[0], c.centroid[1], view.scale * 1.25, 0.7);
+            // Events mark the location without taking control of the camera.
           }
         }
       });
@@ -677,6 +689,7 @@
 
     return {
       resize: resize,
+      resetView: fit,
       setMap: setMap,
       draw: draw,
       pan: pan,

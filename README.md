@@ -98,3 +98,19 @@ asset changes. New versions activate after older tabs close.
 Balance matrix: `node scripts/balance-matrix.cjs` (27 seeded campaigns, results in
 `scripts/balance-matrix.json`). These automated runs are a diagnostic sample, not
 human win-rate estimates. Runtime income now uses diminishing returns.
+
+## Reading and planning
+
+Events never move or zoom the camera. Drag, scroll, zoom buttons, Reset map, and an
+explicit country inspection control the view; resizing preserves its center and zoom.
+
+Evolve, World and News pause the simulation. Each panel has a persistent **Back to
+map** button; Escape or tapping the dimmed backdrop also returns. Returning restores
+the prior pause state, so a deliberately paused game stays paused. The guide follows
+the same rule. Switching away from the tab leaves the game paused for your return.
+
+Situation reports use a stable summary (at least 12 real seconds per headline,
+independent of 1×/2×/3× speed). Read reports or News opens full, selectable text cards,
+with an Important only filter. Related repeat reports are grouped in the summary;
+the archive keeps the latest 120 reports. Reports never open a surprise modal or
+flash a banner over controls. Opening an archive marks its reports as read.

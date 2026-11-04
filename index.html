@@ -41,10 +41,11 @@
     <div id="pick-banner" class="hidden">
       <span id="pick-hint">Tap a country — that data center is your origin.</span>
     </div>
-    <div id="breaking-banner" class="hidden" role="status"></div>
-    <div id="news-ticker" class="ticker">
-      <span id="ticker-text">Systems nominal. Awaiting breach…</span>
-    </div>
+    <button id="news-ticker" class="news-summary" type="button" aria-controls="news-panel" aria-label="Read situation reports">
+      <span class="news-summary-label" id="ticker-category">SITUATION REPORT</span>
+      <span id="ticker-text">Choose your origin. Reports will appear as the operation unfolds.</span>
+      <span class="news-summary-action">Read reports →</span>
+    </button>
     <div id="hud">
       <div class="stat"><span>Time</span><b id="hud-day">Day 0</b></div>
       <div class="stat"><span>Data</span><b id="hud-data">0</b></div>
@@ -92,25 +93,19 @@
         <div class="cp-row"><span id="cp-sec">—</span></div>
         <p id="cp-detail" class="cp-detail"></p>
       </div>
-      <div id="event-popup" class="popup hidden">
-        <div class="popup-card">
-          <h3 id="popup-title">ALERT</h3>
-          <p id="popup-body"></p>
-          <button id="popup-ok" class="primary">Acknowledge</button>
-        </div>
-      </div>
     </div>
-    <div id="evo-panel" class="sheet hidden" role="region" aria-label="Evolution lab"><div class="sheet-heading"><span>Evolution lab</span><button class="sheet-close" aria-label="Close Evolution lab">×</button></div>
+    <button id="sheet-backdrop" class="sheet-backdrop hidden" tabindex="-1" aria-label="Back to map"></button>
+    <div id="evo-panel" class="sheet hidden" role="dialog" aria-modal="true" tabindex="-1" aria-label="Evolution lab"><div class="sheet-heading"><span>Evolution lab</span><button class="sheet-close" aria-label="Back to map from Evolution lab">← Back to map</button></div><p class="sheet-pause-note">Simulation paused. Take your time.</p>
       <div id="evo-tabs"></div>
       <div id="evo-tree" class="evo-tree" aria-hidden="false"></div>
       <div id="evo-body"></div>
     </div>
-    <div id="stats-panel" class="sheet hidden" role="region" aria-label="Global intelligence"><div class="sheet-heading"><span>Global intelligence</span><button class="sheet-close" aria-label="Close Global intelligence">×</button></div>
+    <div id="stats-panel" class="sheet hidden" role="dialog" aria-modal="true" tabindex="-1" aria-label="Global intelligence"><div class="sheet-heading"><span>Global intelligence</span><button class="sheet-close" aria-label="Back to map from Global intelligence">← Back to map</button></div><p class="sheet-pause-note">Simulation paused. Take your time.</p>
       <h3>World status</h3>
       <div id="stats-body"></div>
     </div>
-    <div id="news-panel" class="sheet hidden" role="region" aria-label="Situation room"><div class="sheet-heading"><span>Situation room</span><button class="sheet-close" aria-label="Close Situation room">×</button></div>
-      <h3>News log</h3>
+    <div id="news-panel" class="sheet hidden" role="dialog" aria-modal="true" tabindex="-1" aria-label="Situation room"><div class="sheet-heading"><span>Situation room</span><button class="sheet-close" aria-label="Back to map from Situation room">← Back to map</button></div><p class="sheet-pause-note">Simulation paused. Take your time.</p>
+      <div class="news-toolbar"><label for="news-filter">Show reports</label><select id="news-filter"><option value="all">All reports</option><option value="important">Important only</option></select></div>
       <div id="news-log-body"></div>
     </div>
   </div>
@@ -128,6 +123,7 @@
   <script src="js/data.js"></script>
   <script src="js/sim.js"></script>
   <script src="js/render.js"></script>
+  <script src="js/news.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/main.js"></script>

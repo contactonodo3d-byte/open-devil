@@ -60,7 +60,7 @@ La emulación móvil no sustituye pruebas en iPhone/Safari o Android físicos.
 
 ## Validación final y límites
 
-Siete pruebas Node y seis escenarios de navegador (tres en escritorio y tres con
+Nueve pruebas Node y catorce escenarios de navegador (siete en escritorio y siete con
 viewport/touch móvil). Cubren simulación, persistencia, corrupción, fin de partida,
 entrada, guía, selector, recarga, menú, evolución y carga offline. Capturas reales
 revisadas para menú, mapa y evolución. La prueba de reinicio fuerza el final; no
@@ -77,3 +77,29 @@ No se identificó una vulnerabilidad explotable en esta revisión. Hay `innerHTM
 para datos embebidos; si se incorporan partidas importadas o contenido externo,
 reemplazarlo por nodos/textContent o sanitización antes de aceptar esos datos.
 Esto no equivale a una certificación de seguridad.
+
+## Corrección de UX a partir del juego publicado
+
+Reproducción en Chromium móvil del sitio público: la escala pasó de 0,1794 a 0,22425
+por el efecto de breach inicial, sin una orden de zoom del jugador; Evolve no tenía
+ningún botón de regreso. La rama rediseñada aún conservaba la lógica de autoenfoque.
+
+Se eliminaron los enfoques por breach/fall y el zoom inicial automático. Pan/zoom
+manual cancela una animación de enfoque pendiente. Resize conserva centro y escala;
+Reset map es una acción explícita separada.
+
+Evolve/World/News son paneles modales con Back to map fijo, Escape, backdrop, foco
+contenido/restaurado y controles de fondo inertes. La simulación se pausa al abrir y
+recupera su estado anterior al cerrar. El manual aplica la misma regla. Antes de
+seleccionar origen, estos controles están deshabilitados y el selector dice Start here.
+
+Las noticias tienen una cola de presentación independiente de la velocidad, con un
+mínimo de doce segundos por titular y pausa al leer. La cola agrupa eventos repetidos;
+el archivo conserva reportes completos como tarjetas con fecha y categoría. El filtro
+Important only excluye los titulares humorísticos complementarios. Se retiraron los
+banners parpadeantes y popups automáticos. La caché offline se incrementó a v3.
+
+Las regresiones verifican estabilidad de cámara con eventos, redimensionamiento y
+pan manual, salida visible tras hacer scroll en Evolve, conservación de pausa,
+lectura de noticias y un recorrido con compra mediante la UI, eventos naturales de
+mitad de partida acelerados mediante pasos de simulación, guía y retorno al mapa.

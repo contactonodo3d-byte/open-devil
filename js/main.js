@@ -42,6 +42,7 @@
       mode = "pick";
       ui.showPickStart();
       renderer.resize();
+      renderer.resetView();
       document.getElementById("game-screen").classList.remove("hidden");
       document.getElementById("boot-screen").classList.add("hidden");
       document.getElementById("pick-banner").classList.remove("hidden");
@@ -173,10 +174,6 @@
         ui.showGame();
         ui.showCountry(state, id);
         ui.updateHud(state);
-        if (renderer.focusOn) {
-          const c = state.world.countries[id];
-          renderer.focusOn(c.centroid[0], c.centroid[1], renderer.getView().scale * 1.3, 0.8);
-        }
         ui.beep(520, 0.1);
       }
       return;
@@ -249,7 +246,7 @@
   document.getElementById("btn-continue").onclick = function () {
     const saved = window.SaveGame.read(); if (!saved) { refreshContinue(); return; }
     state = saved; mode = "play"; accumulator = 0;
-    renderer.setMap(window.WORLD_MAP); ui.showGame(); renderer.resize();
+    renderer.setMap(window.WORLD_MAP); ui.showGame(); renderer.resize(); renderer.resetView();
     document.getElementById("pick-banner").classList.add("hidden");
     ui.updateHud(state); ui.showCountry(state, state.startCountry);
   };
@@ -276,9 +273,19 @@
   function zoom(factor) { renderer.zoomAt(canvas.clientWidth/2,canvas.clientHeight/2,factor); }
   document.getElementById("zoom-in").onclick=function(){zoom(1.3);};
   document.getElementById("zoom-out").onclick=function(){zoom(1/1.3);};
-  document.getElementById("zoom-fit").onclick=function(){renderer.resize();};
+  document.getElementById("zoom-fit").onclick=function(){renderer.resetView();};
   const guide=document.getElementById("guide-dialog");
-  function openGuide(){if(state && mode==="play")state.paused=true;guide.showModal();}
+  let guideState = null, guideWasPaused = true;
+  function openGuide(){
+    guideState = mode === "play" ? state : null;
+    guideWasPaused = guideState ? guideState.paused : true;
+    if (guideState) guideState.paused = true;
+    guide.showModal();
+  }
+  guide.addEventListener("close",function(){
+    if (state && state === guideState && !state.ended) state.paused = guideWasPaused || document.hidden;
+    guideState = null;
+  });
   document.getElementById("btn-guide").onclick=openGuide;
   document.getElementById("btn-help").onclick=openGuide;
   document.getElementById("guide-close").onclick=document.getElementById("guide-done").onclick=function(){guide.close();};
@@ -286,12 +293,13 @@
   document.getElementById("guide-thresholds").textContent="Shadow: critical infrastructure ≥ "+Math.round(w.shadowInfra*100)+"%, alarm ≤ "+Math.round(w.shadowAlarmMax*100)+"%, Kill Switch ≤ "+Math.round(w.shadowKsMax*100)+"%. Overt: infrastructure ≥ "+Math.round(w.overtInfra*100)+"%, military ≥ "+Math.round(w.overtMilitary*100)+"%.";
   document.addEventListener("keydown",function(e){
     if (guide.open || /INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName)) return;
-    if(mode!=="play")return;
+    if(mode!=="play" || ui.isPanelOpen())return;
     if(e.code==="Space"){e.preventDefault();state.paused=!state.paused;}
     if(e.key.toLowerCase()==="e")document.getElementById("btn-evo").click();
     if(e.key==="+")zoom(1.3);if(e.key==="-")zoom(1/1.3);
   });
   document.addEventListener("visibilitychange",function(){
+    if(document.hidden && guide.open) guideWasPaused = true;
     if(document.hidden && state){window.SaveGame.write(state);state.paused=true;accumulator=0;}
     lastTs=0;
   });

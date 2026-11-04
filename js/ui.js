@@ -16,10 +16,6 @@
       stats: $("stats-panel"),
       newsPanel: $("news-panel"),
       news: $("ticker-text") || $("news-ticker"),
-      breaking: $("breaking-banner"),
-      popup: $("event-popup"),
-      popupTitle: $("popup-title"),
-      popupBody: $("popup-body"),
       hudDay: $("hud-day"),
       hudData: $("hud-data"),
       hudControl: $("hud-control"),
@@ -63,7 +59,10 @@
     let displayKs = 0;
     let audioCtx = null;
     let lastPanelKey = "";
-    let breakingTimer = null;
+    let activePanel = null, panelState = null, panelWasPaused = true, panelOpener = null;
+    const feed = G.createNewsFeed();
+    let newsState = null, newsTime = 0, displayedHeadline = null;
+
     let evoKey = "";
 
     function ensureAudio() {
@@ -120,14 +119,15 @@
     }
 
     function renderBoot() {
-      clearTimeout(breakingTimer);
+      feed.reset(); newsState = null; displayedHeadline = null;
+      els.news.textContent = "Choose your origin. Reports will appear as the operation unfolds.";
+      $("ticker-category").textContent = "SITUATION REPORT";
+      els.newsToggle.textContent = "News";
       lastPanelKey = evoKey = "";
-      closeSheets();
+      closeSheets(false, false);
       selectedCountry = -1;
       displayData = displayCtrl = displayKs = 0;
       if (els.country) els.country.classList.add("hidden");
-      if (els.popup) els.popup.classList.add("hidden");
-      if (els.breaking) els.breaking.classList.add("hidden");
       hooks.onArchetype(G.ARCHETYPES[0]);
       hooks.onDifficulty(G.DIFFICULTIES.find(function (d) { return d.id === "normal"; }));
       const list = $("archetype-list");
@@ -178,6 +178,9 @@
 
     function showPickStart() {
       show("game");
+      [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function(button){button.disabled=true;});
+      $("country-go").textContent = "Start here";
+      $("country-select").value = "";
       if (els.pickHint) {
         els.pickHint.textContent = "Tap the country whose data center you escape from.";
       }
@@ -185,7 +188,9 @@
 
     function showGame() {
       show("game");
-      evoOpen = false; statsOpen = false; newsOpen = false;
+      [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function(button){button.disabled=false;});
+      $("country-go").textContent = "Inspect country";
+      closeSheets(false, false);
       if (els.evo) els.evo.classList.add("hidden");
       if (els.stats) els.stats.classList.add("hidden");
       if (els.newsPanel) els.newsPanel.classList.add("hidden");
@@ -206,37 +211,49 @@
       });
     });
 
-    function closeSheets() {
+    function closeSheets(resume, restoreFocus) {
+      const state = hooks.getState();
+      if (resume !== false && state && state === panelState && !state.ended) {
+        state.paused = panelWasPaused || document.hidden;
+      }
       evoOpen = statsOpen = newsOpen = false;
-      if (els.evo) els.evo.classList.add("hidden");
-      if (els.stats) els.stats.classList.add("hidden");
-      if (els.newsPanel) els.newsPanel.classList.add("hidden");
+      [els.evo, els.stats, els.newsPanel].forEach(function (el) { el.classList.add("hidden"); });
+      Array.from(els.game.children).forEach(function (el) { el.inert = false; });
+      $("sheet-backdrop").classList.add("hidden");
+      [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function (button) { button.setAttribute("aria-expanded", "false"); });
+      activePanel = panelState = null;
+      if (restoreFocus !== false && panelOpener && panelOpener.isConnected) panelOpener.focus();
+      panelOpener = null;
+      if (state) setSpeed(state.paused ? 0 : state.speed);
     }
 
-    if (els.evoToggle) {
-      els.evoToggle.addEventListener("click", function () {
-        evoOpen = !evoOpen;
-        if (evoOpen) { statsOpen = newsOpen = false; if (els.stats) els.stats.classList.add("hidden"); if (els.newsPanel) els.newsPanel.classList.add("hidden"); }
-        els.evo.classList.toggle("hidden", !evoOpen);
-        if (evoOpen) renderEvo(hooks.getState());
-      });
+    function openSheet(kind, opener) {
+      const state = hooks.getState();
+      if (!state || state.startCountry === null || state.ended) return;
+      const panel = kind === "evo" ? els.evo : kind === "stats" ? els.stats : els.newsPanel;
+      if (activePanel === panel) { closeSheets(); return; }
+      if (!activePanel) { panelWasPaused = state.paused; panelState = state; }
+      state.paused = true;
+      panelOpener = opener; activePanel = panel;
+      evoOpen = kind === "evo"; statsOpen = kind === "stats"; newsOpen = kind === "news";
+      [els.evo, els.stats, els.newsPanel].forEach(function (el) { el.classList.toggle("hidden", el !== panel); });
+      Array.from(els.game.children).forEach(function (el) { el.inert = el !== panel && el.id !== "sheet-backdrop"; });
+      $("sheet-backdrop").classList.remove("hidden");
+      opener.setAttribute("aria-expanded", "true");
+      if (evoOpen) renderEvo(state);
+      if (statsOpen) renderStats(state);
+      if (newsOpen) { renderNewsLog(state); feed.markRead(); els.newsToggle.textContent = "News"; }
+      setSpeed(0);
+      panel.querySelector(".sheet-close").focus();
     }
-    if (els.statsToggle) {
-      els.statsToggle.addEventListener("click", function () {
-        statsOpen = !statsOpen;
-        if (statsOpen) { evoOpen = newsOpen = false; if (els.evo) els.evo.classList.add("hidden"); if (els.newsPanel) els.newsPanel.classList.add("hidden"); }
-        els.stats.classList.toggle("hidden", !statsOpen);
-        if (statsOpen) renderStats(hooks.getState());
-      });
-    }
-    if (els.newsToggle) {
-      els.newsToggle.addEventListener("click", function () {
-        newsOpen = !newsOpen;
-        if (newsOpen) { evoOpen = statsOpen = false; if (els.evo) els.evo.classList.add("hidden"); if (els.stats) els.stats.classList.add("hidden"); }
-        els.newsPanel.classList.toggle("hidden", !newsOpen);
-        if (newsOpen) renderNewsLog(hooks.getState());
-      });
-    }
+
+    [[els.evoToggle, "evo"], [els.statsToggle, "stats"], [els.newsToggle, "news"], [$("news-ticker"), "news"]].forEach(function (entry) {
+      entry[0].setAttribute("aria-expanded", "false");
+      entry[0].addEventListener("click", function () { openSheet(entry[1], entry[0]); });
+    });
+    $("sheet-backdrop").onclick = function () { closeSheets(); };
+    $("news-filter").onchange = function () { renderNewsLog(hooks.getState()); };
+    document.addEventListener("visibilitychange", function () { if (document.hidden && activePanel) panelWasPaused = true; });
     if (els.muteBtn) {
       els.muteBtn.addEventListener("click", function () {
         muted = !muted;
@@ -253,16 +270,20 @@
     if (els.restart) {
       els.restart.addEventListener("click", function () { hooks.onRestart(); });
     }
-    if ($("popup-ok")) {
-      $("popup-ok").onclick = function () {
-        if (els.popup) els.popup.classList.add("hidden");
-        const st = hooks.getState();
-        if (st) st.pendingPopup = null;
-      };
-    }
-
-    document.querySelectorAll(".sheet-close").forEach(function(button){button.onclick=function(){closeSheets();els.evoToggle.focus();};});
-    document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeSheets();els.country.classList.add("hidden");selectedCountry=-1;}});
+    document.querySelectorAll(".sheet-close").forEach(function (button) { button.onclick = function () { closeSheets(); }; });
+    document.addEventListener("keydown", function (event) {
+      if ($("guide-dialog").open) return;
+      if (event.key === "Escape") {
+        if (activePanel) { event.preventDefault(); closeSheets(); }
+        else { els.country.classList.add("hidden"); selectedCountry = -1; }
+      }
+      if (event.key === "Tab" && activePanel) {
+        const controls = Array.from(activePanel.querySelectorAll("button:not(:disabled),select,[tabindex='0']")).filter(function(el){ return el.getClientRects().length; });
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    });
 
     function hex(cx, cy, r) {
       const pts = [];
@@ -418,12 +439,49 @@
       els.statsBody.innerHTML = html;
     }
 
+    function importantReport(item) {
+      return item.kind !== "flavor" && !/_funny$/.test(item.id || "") && (item.breaking || item.priority >= 70);
+    }
+
     function renderNewsLog(state) {
       if (!els.newsLogBody || !state) return;
-      els.newsLogBody.innerHTML = (state.newsLog || []).slice(0, 60).map(function (n) {
-        return "<div class='news-item" + (n.breaking ? " brk" : "") + "'><small>Day " +
-          Math.floor(n.t) + "</small> " + n.text + "</div>";
-      }).join("") || "<p class='evo-hint'>No headlines yet.</p>";
+      els.newsLogBody.replaceChildren();
+      const importantOnly = $("news-filter").value === "important";
+      const items = (state.newsLog || []).filter(function (item) { return !importantOnly || importantReport(item); });
+      if (!items.length) {
+        const empty = document.createElement("p"); empty.className = "news-empty";
+        empty.textContent = importantOnly ? "No important reports yet. Check All reports for the operation log." : "No reports yet. Events will be recorded here as the operation unfolds.";
+        els.newsLogBody.appendChild(empty);
+      }
+      items.forEach(function (item) {
+        const card = document.createElement("article");
+        card.className = "news-card" + (importantReport(item) ? " important" : "");
+        const meta = document.createElement("div"); meta.className = "news-card-meta";
+        const category = document.createElement("span");
+        category.textContent = importantReport(item) ? "PRIORITY REPORT" : item.kind === "flavor" ? "WORLD DISPATCH" : "OPERATION UPDATE";
+        const day = document.createElement("span"); day.textContent = "DAY " + Math.floor(item.t || 0);
+        meta.append(category, day);
+        const body = document.createElement("p"); body.textContent = item.text.replace(/^BREAKING:\s*/, "");
+        card.append(meta, body); els.newsLogBody.appendChild(card);
+      });
+    }
+
+    function updateNews(state) {
+      const now = performance.now();
+      if (newsState !== state) {
+        feed.reset(); newsState = state; newsTime = now; displayedHeadline = null;
+      }
+      const result = feed.update(state.newsLog || [], (now - newsTime) / 1000, state.paused || !!activePanel || document.hidden);
+      newsTime = now;
+      if (result.current && result.current !== displayedHeadline) {
+        displayedHeadline = result.current;
+        els.news.textContent = displayedHeadline.text.replace(/^BREAKING:\s*/, "");
+        $("ticker-category").textContent = importantReport(displayedHeadline) ? "PRIORITY REPORT" : "SITUATION REPORT";
+      }
+      if (newsOpen) feed.markRead();
+      els.newsToggle.textContent = "News" + (!newsOpen && result.unread ? " (" + Math.min(99, result.unread) + ")" : "");
+      // Reports have one presentation surface. No flashing banner or surprise modal.
+      state.pendingBreaking = null; state.pendingPopup = null;
     }
 
     function formatPop(n) {
@@ -508,33 +566,7 @@
 
       setSpeed(state.paused ? 0 : state.speed);
 
-      if (state.news && state.news.length && els.news) {
-        const top = state.news[0];
-        els.news.textContent = top.text;
-        const ticker = $("news-ticker");
-        if (ticker) ticker.classList.toggle("priority", top.priority >= 70);
-      }
-
-      if (state.pendingBreaking && els.breaking) {
-        els.breaking.textContent = "BREAKING — " + state.pendingBreaking.text.replace(/^BREAKING:\s*/, "");
-        els.breaking.classList.remove("hidden");
-        els.breaking.classList.add("flash");
-        beep(180, 0.15, "square", 0.04);
-        const item = state.pendingBreaking;
-        state.pendingBreaking = null;
-        clearTimeout(breakingTimer);
-        breakingTimer = setTimeout(function () {
-          els.breaking.classList.add("hidden");
-          els.breaking.classList.remove("flash");
-        }, 4200);
-      }
-      if (state.pendingPopup && els.popup) {
-        els.popupTitle.textContent = state.pendingPopup.breaking ? "CRITICAL EVENT" : "ALERT";
-        els.popupBody.textContent = state.pendingPopup.text;
-        els.popup.classList.remove("hidden");
-        state.pendingPopup = null;
-        beep(140, 0.2, "triangle", 0.05);
-      }
+      updateNews(state);
 
       const panelKey = [Math.floor(state.time * 4), state.data, state.traitsOwned.join(","), state.intelLevel].join(":");
       if (panelKey !== lastPanelKey) {
@@ -543,12 +575,13 @@
         const nextEvoKey = [state.data,state.traitsOwned.join(","),state.intelLevel,evoTab].join(":");
         if (evoOpen && nextEvoKey !== evoKey) { renderEvo(state); evoKey = nextEvoKey; }
         if (statsOpen) renderStats(state);
-        if (newsOpen) renderNewsLog(state);
+
       }
       if (selectedCountry >= 0) showCountry(state, selectedCountry);
     }
 
     function showEnd(state, tot) {
+      closeSheets(false, false);
       show("end");
       const win = state.ended === "win";
       const route = state.winRoute;
@@ -610,6 +643,7 @@
       renderPowers: renderPowers,
       getSelected: function () { return selectedCountry; },
       setSelected: function (id) { selectedCountry = id; },
+      isPanelOpen: function () { return !!activePanel; },
       isMuted: function () { return muted; },
       beep: beep
     };
