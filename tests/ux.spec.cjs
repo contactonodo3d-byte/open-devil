@@ -5,7 +5,9 @@ async function start(page){
  await page.locator('#country-select').selectOption(usa);await page.locator('#country-go').click();await page.waitForTimeout(600);
  if(await page.locator('#country-close').isVisible()) await page.locator('#country-close').click();
 }
-async function view(page){return page.evaluate(()=>{const v=__OD.renderer.getView(),c=document.querySelector('#map');return {x:v.x,y:v.y,scale:v.scale,centerX:(c.clientWidth/2-v.x)/v.scale,centerY:(c.clientHeight/2-v.y)/v.scale};});}
+async function view(page){
+ await expect.poll(()=>page.evaluate(()=>{const c=document.querySelector('#map');return c.clientWidth===c.parentElement.clientWidth&&c.clientHeight===c.parentElement.clientHeight;})).toBe(true);
+ return page.evaluate(()=>{const v=__OD.renderer.getView(),c=document.querySelector('#map');return {x:v.x,y:v.y,scale:v.scale,centerX:(c.clientWidth/2-v.x)/v.scale,centerY:(c.clientHeight/2-v.y)/v.scale};});}
 test('events never hijack the map; resizing preserves zoom and location',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));await start(page);
  await page.locator('#zoom-in').click();
