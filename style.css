@@ -17,6 +17,10 @@ h1,h2,h3,p { margin:0; } a { color:var(--mint); }
 .card { text-align:left; color:inherit; font:inherit; }
 #boot-screen {
   display:block;
+  overflow-x:hidden;
+  overflow-y:auto;
+  touch-action:pan-y pinch-zoom;
+  overscroll-behavior-x:none;
   padding:32px 5vw;
   background:radial-gradient(ellipse at 20% 55%,#3a192836,transparent 55%),#090e17;
 }
@@ -59,10 +63,12 @@ h1,h2,h3,p { margin:0; } a { color:var(--mint); }
 }
 
 .menu-layout{
+  width:100%;
+  min-width:0;
   max-width:1440px;
   margin:45px auto 35px;
   display:grid;
-  grid-template-columns:1.15fr 1fr;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
   gap:8vw;
   align-items:center;
 }
@@ -93,7 +99,8 @@ h1,h2,h3,p { margin:0; } a { color:var(--mint); }
 .hero-world{
   height:250px;
   position:relative;
-  margin:15px -30px 0;
+  margin:15px 0 0;
+  max-width:100%;
   display:grid;
   place-items:center;
   overflow:hidden;
@@ -147,6 +154,7 @@ h1,h2,h3,p { margin:0; } a { color:var(--mint); }
 }
 
 .setup{
+  min-width:0;
   max-width:560px;
   width:100%;
 }
@@ -424,7 +432,7 @@ h1.win { color:var(--mint); } h1.lose { color:var(--red); }
 #end-text { text-align:center; max-width:500px; font-size:14px; line-height:1.7; color:#a9bdcf; }
 #end-text p { margin:12px 0; } #end-text b { color:#e2eef8; }
 @media(max-width:900px) {
-  .menu-layout { gap:35px; grid-template-columns:.9fr 1fr; }
+  .menu-layout { gap:35px; grid-template-columns:minmax(0,.9fr) minmax(0,1fr); }
   .menu-story h1 { font-size:50px; letter-spacing:-2px; }
   .story-footer { flex-wrap:wrap; gap:10px; }
   .system-label { font-size:8px; }
@@ -475,11 +483,11 @@ h1.win { color:var(--mint); } h1.lose { color:var(--red); }
 @media(max-width:700px) {
   #boot-screen { padding:20px; }
   .menu-layout { display:flex; flex-direction:column; gap:25px; margin:28px auto 15px; }
-  .menu-story { width:100%; position:relative; }
-  .menu-story h1 { font-size:48px; position:relative; z-index:1; }
+  .menu-story { width:100%; min-width:0; position:relative; }
+  .menu-story h1 { font-size:clamp(34px,11.5vw,48px); position:relative; z-index:1; }
   .menu-story .eyebrow { font-size:8px; margin-bottom:13px; }
   .menu-lead { font-size:12px; margin-top:13px; }
-  .hero-world { position:absolute; right:-20px; top:35px; width:210px; height:160px; opacity:.35; }
+  .hero-world { position:absolute; right:0; top:35px; width:210px; height:160px; opacity:.35; }
   .hero-world:before { width:140px; height:140px; } .hero-world:after { width:100px; height:100px; }
   .hero-world .core { width:40px; height:40px; font-size:28px; }
   .orbit-label,.story-footer,.system-label,.menu-bottom span:last-child { display:none; }
@@ -533,3 +541,6 @@ h1.win { color:var(--mint); } h1.lose { color:var(--red); }
 :lang(es) .command-header b span,:lang(pt-BR) .command-header b span { font-size:9px; }
 :lang(es) .nav-button,:lang(pt-BR) .nav-button { padding-left:10px; padding-right:10px; }
 @media(max-width:600px){.language-picker{font-size:10px;}.language-picker select{max-width:115px;}.menu-top{gap:10px;}:lang(es) .nav-button,:lang(pt-BR) .nav-button{padding-left:3px;padding-right:3px;font-size:10px;}:lang(es) .command-header button,:lang(pt-BR) .command-header button{font-size:9px;padding:6px 7px;}}
+
+/* Native form text at 16px prevents Safari from automatically zooming the menu. */
+#boot-screen select { font-size:16px; }

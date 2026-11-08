@@ -67,7 +67,7 @@ The game still runs without npm. Development checks require Node 22+ and Python 
 
 ```sh
 npm ci
-npx playwright install chromium
+npx playwright install chromium webkit
 npm test
 npm run test:browser
 npm run balance
@@ -173,3 +173,13 @@ translation API is called. Catalog tests check coverage and placeholder preserva
 saved numeric values are never translated. `scripts/localize-source.cjs` is an
 idempotent development helper for wrapping new presentation assignments. Add new text
 to `js/locales/ui.js` or the appropriate data/news catalog when extending the game.
+
+## Build 8: contained menu scrolling
+
+The main menu scrolls vertically and supports intentional pinch zoom, but has no
+horizontal overflow. The decorative map stays inside its column; menu grid tracks
+and children can shrink to the viewport. The language select uses 16px text to avoid
+automatic form-focus zoom in mobile Safari. Menu overflow tests inspect the actual
+`#boot-screen` scroller, attempt horizontal scrolling, verify vertical scrolling and
+exercise the launch button in English, Spanish and Portuguese at four viewport sizes.
+A dedicated WebKit project runs the same checks in CI alongside Chromium.

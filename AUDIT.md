@@ -152,3 +152,18 @@ los parámetros de las plantillas y todos los IDs de simulación. No se invoca u
 de traducción. El cambio de idioma conserva la operación guardada y las opciones del
 menú. Pruebas específicas verifican ambos idiomas en escritorio/touch, los enlaces
 entre paneles, la continuación y la integridad de los catálogos.
+
+## Build 8: desbordamiento horizontal del menú
+
+La captura del usuario mostró desplazamiento del menú, no de la cámara del mapa.
+La prueba nueva reprodujo 350px de scrollWidth en un viewport de 320px y un scrollLeft
+de 30px. Los márgenes negativos del mapa decorativo y el desplazamiento a la derecha
+creaban el exceso. Se eliminaron esos salientes, se acotaron los tracks y elementos
+del menú y se mantuvo exclusivamente el scroll vertical sin impedir el pinch zoom.
+El selector usa 16px para evitar el zoom automático al enfocar formularios en Safari.
+
+La regresión comprueba el scroller real, no solo documentElement: scrollWidth igual
+a clientWidth, scrollLeft invariable en cero tras intentar moverlo y tras alcanzar el
+botón de inicio, y scroll vertical utilizable. Cubre tres idiomas y anchos de 320,
+390, 430 y 844px. Se añadió un proyecto WebKit específico a CI. Estas comprobaciones
+no equivalen a una prueba manual en el dispositivo físico del usuario.
