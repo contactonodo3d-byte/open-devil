@@ -32,7 +32,7 @@ test('Evolve has a persistent exit and preserves the previous pause state',async
  await expect(page.locator('#evo-panel')).toBeHidden();expect(await page.evaluate(()=>__OD.getState().paused)).toBe(false);
  await page.locator('[data-speed="0"]').click();await page.locator('#btn-evo').click();await page.keyboard.press('Escape');
  expect(await page.evaluate(()=>__OD.getState().paused)).toBe(true);await expect(page.locator('#btn-evo')).toBeFocused();
- await page.locator('#btn-stats').click();await page.locator('#btn-map').click();
+ await page.locator('#btn-stats').click();await page.locator('#map').click({position:{x:60,y:60}});
  await expect(page.locator('#stats-panel')).toBeHidden();expect(await page.evaluate(()=>__OD.getState().paused)).toBe(true);
 });
 test('news stays steady and opens readable cards without surprise popups',async({page},testInfo)=>{
