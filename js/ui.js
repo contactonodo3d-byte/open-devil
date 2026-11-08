@@ -132,12 +132,13 @@
       const list = $("archetype-list");
       list.innerHTML = "";
       G.ARCHETYPES.forEach(function (a) {
+        const model={archetype:a,traitsOwned:[],traitById:{}}; G.Sim.recomputeStats(model);
         const btn = document.createElement("button");
         btn.className = "card" + (a.id === G.ARCHETYPES[0].id ? " selected" : "");
         btn.innerHTML = "<h3>" + a.name + "</h3><div>" + a.flavor + "</div>" +
-          "<small>Spread ×" + a.infectivity.toFixed(2) +
-          " · Stealth ×" + a.stealth.toFixed(2) +
-          " · Severity ×" + a.severity.toFixed(2) + "</small>";
+          "<small>Spread ×" + model.stats.infectivity.toFixed(2) +
+          " · Stealth ×" + model.stats.stealth.toFixed(2) +
+          " · Severity ×" + model.stats.severity.toFixed(2) + "</small>" + "<div class='doctrine'>" + G.ARCHETYPE_DOCTRINES[a.id].name + " · " + G.ARCHETYPE_DOCTRINES[a.id].desc + "</div>";
         btn.addEventListener("click", function () {
           document.querySelectorAll("#archetype-list .card").forEach(function (c) {
             c.classList.remove("selected");
@@ -180,6 +181,8 @@
       [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function(button){button.disabled=true;});
       $("country-go").textContent = "Start here";
       $("country-select").value = "";
+      $("country-go").disabled = true;
+      $("origin-preview").textContent = "Choose a country to compare its strengths and risks.";
       $("country-tools").open = true;
       if (els.pickHint) {
         els.pickHint.textContent = "Tap the country whose data center you escape from.";
@@ -352,6 +355,17 @@
           "<div class='tc'>" + (owned ? "OWNED · tap to devolve" :
             lockedIntel ? ("LOCKED · need " + ((G.INTEL_LEVELS || [])[t.intelReq] || {}).name) :
             locked ? "NEEDS " + t.prereq.filter(function(id){return state.traitsOwned.indexOf(id)<0;}).map(function(id){return state.traitById[id].name;}).join(", ") : cost + " Data") + "</div>";
+        const preview = document.createElement("div"); preview.className="effect-preview";
+        const previewTitle=document.createElement("small"); previewTitle.textContent=owned?"If devolved · current → resulting stats":"If purchased · current → resulting stats"; preview.appendChild(previewTitle);
+        G.Strategy.preview(state,t.id).forEach(function(effect){
+          const row=document.createElement("div"); row.className="effect-row";
+          const name=document.createElement("span");name.textContent=effect.label;
+          const value=document.createElement("b");value.textContent=effect.text;
+          if((effect.key==="severity"&&effect.after>effect.before)||(effect.key==="stealth"&&effect.after<effect.before))value.className="risk";
+          row.append(name,value);preview.appendChild(row);
+        });
+        card.appendChild(preview);
+        if(owned&&!G.Sim.canDevolve(state,t.id)) {card.disabled=true;card.querySelector(".tc").textContent="Required by another owned evolution";}
         if (freshCard) card.addEventListener("click", function () {
           const current = hooks.getState();
           if (current.traitsOwned.indexOf(t.id)>=0) {
@@ -421,6 +435,24 @@
       });
       html += "</tbody></table>";
       els.statsBody.innerHTML = html;
+      els.statsBody.prepend(goalChecklist(state));
+    }
+
+    function goalChecklist(state) {
+      const section=document.createElement("section");section.className="goal-checklist";
+      const title=document.createElement("h3");title.textContent="Paths to victory";section.appendChild(title);
+      G.Strategy.goals(state).forEach(function(route){
+        const card=document.createElement("article");card.className="goal-route";
+        const heading=document.createElement("h4");heading.textContent=route.name+" · "+route.checks.filter(function(c){return c.ok;}).length+"/"+route.checks.length;card.appendChild(heading);
+        route.checks.forEach(function(check){
+          const line=document.createElement("div");line.className="goal-check "+(check.ok?"met":"missing");
+          const name=document.createElement("span");name.textContent=(check.ok?"Met · ":"Need · ")+check.label;
+          const value=document.createElement("b");value.textContent=(check.value*100).toFixed(1)+"% / "+check.direction+" "+(check.target*100).toFixed(1)+"%";
+          line.append(name,value);card.appendChild(line);
+        });section.appendChild(card);
+      });
+      const note=document.createElement("p");note.textContent="All conditions in one route must hold together. Kill Switch 100% ends the game first. Infrastructure is weighted by country and sector, not just population.";section.appendChild(note);
+      return section;
     }
 
     function importantReport(item) {
@@ -446,7 +478,17 @@
         const day = document.createElement("span"); day.textContent = "DAY " + Math.floor(item.t || 0);
         meta.append(category, day);
         const body = document.createElement("p"); body.textContent = item.text.replace(/^BREAKING:\s*/, "");
-        card.append(meta, body); els.newsLogBody.appendChild(card);
+        card.append(meta, body);
+        const advice=G.Strategy.report(item);
+        const impact=document.createElement("p");impact.className="report-impact";impact.textContent="Impact: "+advice.impact;
+        const next=document.createElement("p");next.className="report-next";next.textContent="Next step: "+advice.next;
+        card.append(impact,next);
+        if(advice.action!=="news") {
+          const action=document.createElement("button");action.className="report-action";
+          action.textContent=advice.action==="evo"?"Review evolutions →":"Review World & objectives →";
+          action.onclick=function(){openSheet(advice.action,advice.action==="evo"?els.evoToggle:els.statsToggle);};card.appendChild(action);
+        }
+        els.newsLogBody.appendChild(card);
       });
     }
 
@@ -621,6 +663,26 @@
         " · Traits: " + state.traitsOwned.length + "</p>" +
         (best ? "<p class='best'>Best (" + state.difficulty.name + "): " + best.days + " days as " +
           best.archetype + (best.route ? " [" + best.route + "]" : "") + "</p>" : "");
+      const review=G.Strategy.debrief(state,tot);
+      const debrief=document.createElement("section");debrief.className="debrief";
+      const heading=document.createElement("h3");heading.textContent="Operation review";
+      const reason=document.createElement("p");reason.textContent=review.reason;
+      const facts=document.createElement("p");facts.textContent=review.context.join(" · ");
+      const lesson=document.createElement("p");lesson.className="debrief-lesson";lesson.textContent="Next run: "+review.suggestion;
+      debrief.append(heading,reason,facts,lesson);
+      if(review.remaining.length){const missing=document.createElement("p");missing.textContent="Unmet takeover targets — "+review.remaining.join(". ");debrief.appendChild(missing);}
+      const label=document.createElement("h4");label.textContent="Your decisions & milestones";debrief.appendChild(label);
+      const timeline=document.createElement("ol");timeline.className="decision-timeline";
+      review.history.forEach(function(event){
+        const item=document.createElement("li");
+        const trait=state.traitById[event.id],power=G.ACTIVE_POWERS.find(function(p){return p.id===event.id;});
+        const country=state.world.byIso[event.id];
+        const name=event.type==="intelligence"?(G.INTEL_LEVELS[Number(event.id)]||{}).name:trait?trait.name:power?power.name:country?country.name:event.id;
+        item.textContent="Day "+Math.floor(event.day)+" · "+event.type+" · "+name;timeline.appendChild(item);
+      });
+      if(!review.history.length){const item=document.createElement("li");item.textContent="No recorded decisions in this operation. Older saves begin recording after loading this version.";timeline.appendChild(item);}
+      debrief.appendChild(timeline);els.endText.appendChild(debrief);
+
     }
 
     return {

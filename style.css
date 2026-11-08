@@ -362,7 +362,7 @@ select { min-width:0; max-width:100%; min-height:36px; padding:8px; background:#
 .live-dot { display:inline-block; width:5px; height:5px; margin-right:6px; background:var(--mint); border-radius:50%; }
 .map-tools { position:absolute; top:12px; right:12px; z-index:3; display:grid; gap:5px; }
 .map-tools button { width:36px; height:36px; background:#132231e8; border:1px solid #3b536b; border-radius:4px; color:#e1eaf3; font-size:23px; }
-.map-legend { position:absolute; bottom:10px; right:12px; display:flex; gap:12px; z-index:2; font:8px monospace; color:var(--mint); pointer-events:none; }
+.map-legend { position:absolute; bottom:10px; right:12px; display:flex; gap:12px; z-index:2; font:8px monospace; color:#ff617c; pointer-events:none; }
 .map-legend span:nth-child(2) { color:#ffac58; } .map-legend span:nth-child(3) { color:#65b6f5; }
 .panel { position:absolute; left:12px; bottom:28px; max-height:48%; overflow:auto; width:min(285px,calc(100% - 60px)); padding:14px; border:1px solid #41576c; border-radius:6px; background:#101d2af2; z-index:4; }
 .panel h3 { font-size:17px; padding-right:28px; margin-bottom:12px; }
@@ -498,3 +498,31 @@ h1.win { color:var(--mint); } h1.lose { color:var(--red); }
 #btn-evo.available:after { content:""; display:inline-block; margin-left:7px; width:6px; height:6px; background:var(--mint); border-radius:50%; vertical-align:middle; }
 @media(max-width:600px) { #news-ticker { min-height:64px; padding:10px; } }
 @media(max-height:500px) and (orientation:landscape) { #news-ticker { display:flex; min-height:48px; margin:3px 8px; padding:6px 10px; } .news-summary-label { display:none; } }
+/* Strategic information stays inside existing scrollable workspaces. */
+.doctrine { margin-top:9px; padding-top:8px; border-top:1px solid #3a4354; font-size:11px!important; line-height:1.6!important; color:#badad3!important; }
+.effect-preview { margin-top:10px; padding-top:8px; border-top:1px solid #345064; }
+.effect-preview small { color:#b9cadb; font-size:9px; }
+.effect-row { display:flex; justify-content:space-between; gap:10px; margin-top:5px; font-size:10px; line-height:1.5; }
+.effect-row b { color:var(--mint); white-space:nowrap; font-weight:500; }
+.effect-row b.risk { color:#ffad98; }
+.goal-checklist { margin-bottom:16px; }
+.goal-checklist>h3 { font-size:16px; margin-bottom:12px; }
+.goal-route { padding:12px; margin-bottom:10px; border:1px solid #38506a; border-radius:6px; background:#172737; }
+.goal-route h4 { font-size:12px; margin:0 0 10px; }
+.goal-check { display:flex; flex-direction:column; gap:3px; font-size:10px; padding:7px 0; border-top:1px solid #2e4255; }
+.goal-check b { color:#becbdb; font-size:10px; font-weight:400; }
+.goal-check.met>span { color:var(--mint); }.goal-check.missing>span { color:#edbb8b; }
+.goal-checklist>p { font-size:10px; line-height:1.6; color:var(--muted); }
+.news-card p.report-impact,.news-card p.report-next { font-size:11px; color:#afc6da; margin-top:12px; line-height:1.65; }
+.report-action { margin-top:12px; min-height:36px; padding:7px 10px; border:1px solid #476078; border-radius:4px; background:#213b4e; color:#d4f4ed; font-size:11px; }
+#origin-preview { grid-column:1/-1; grid-row:3; font-size:11px; color:#adc4d7; line-height:1.6; }
+#origin-preview b { color:#e4edf5; } #origin-preview p { margin-top:8px; }
+.country-search { max-height:calc(100dvh - 170px); overflow:auto; }
+#country-select { grid-column:1;grid-row:2; } #country-go { grid-column:2;grid-row:2; }
+#end-screen { justify-content:flex-start; gap:16px; padding:24px; }
+#end-screen>h1,#restart { flex-shrink:0; }
+#end-text { min-height:0; overflow:auto; flex:1; width:min(600px,100%); max-width:600px; padding:0 8px; }
+.debrief { text-align:left; padding:18px; border:1px solid #3c536a; border-radius:7px; margin-top:20px; background:#152536; }
+.debrief h3 { font-size:18px; }.debrief h4 { font-size:13px; }.debrief p { font-size:12px; line-height:1.7; }
+.debrief-lesson { color:var(--mint); }
+.decision-timeline { padding-left:20px; color:#b2c9db; font-size:11px; line-height:1.8; }

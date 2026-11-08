@@ -93,7 +93,8 @@ available. A hidden tab pauses automatically. Reduced motion skips the introduct
 
 After the first complete visit over HTTPS or localhost, a service worker caches the
 application for offline play. Increment the cache version in `sw.js` when shipping
-asset changes. New versions activate after older tabs close.
+asset changes. From build 6, the completed cache activates immediately; navigation
+checks the network first and falls back to the cached application when offline.
 
 Balance matrix: `node scripts/balance-matrix.cjs` (27 seeded campaigns, results in
 `scripts/balance-matrix.json`). These automated runs are a diagnostic sample, not
@@ -128,3 +129,30 @@ Layout checks cover 320×568, 390×844, 844×390, 768×1024 and 1280×800, with 
 touch contexts. All CSS/JS URLs and the offline cache are versioned together for
 this release. When changing the cache version, update the HTML asset query versions
 and the service worker precache list together.
+
+## Build 6: strategic decisions
+
+Evolution cards show current → resulting stats before buying (or devolving), including
+stat caps and visibility tradeoffs. World contains the exact checklist for Quiet
+Singularity, Overt takeover, and the alternative absolute-control route. Every condition
+within a route must hold together; the Kill Switch reaching 100% takes precedence.
+
+Reports explain impact and suggested responses, with buttons to open the relevant
+workspace. Flavor/joke reports are explicitly identified as having no separate
+mechanical effect. Suggestions are guidance, not guarantees of success.
+
+Archetype doctrines add distinct permanent tradeoffs: Worm favors land spread with
+less stealth, Social favors stealth with less spread, and Cracker favors wealthy
+systems with higher visibility. The setup screen displays the actual starting stats.
+Origin profiles show hub connections, security/compute tradeoffs and starting bonuses:
+wealth ≤2 gives +6 Data, while four or more land neighbors gives a 20% larger initial
+foothold. Map selection opens the profile; Start here confirms the origin.
+
+The postgame review explains the final condition, lists unmet route requirements on
+loss, suggests a next-run adjustment and displays recent recorded decisions/milestones.
+A bounded decision timeline survives saves. Older saves load with an empty timeline
+and begin recording new actions; pre-update decisions are never invented.
+
+Run `node scripts/balance-origins.cjs` for the 12-run origin/archetype sample in addition
+to the 27-run difficulty matrix. Both use a diagnostic bot and fixed simulation steps;
+they do not estimate human win rates.

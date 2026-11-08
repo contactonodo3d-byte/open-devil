@@ -68,6 +68,8 @@
     s.poor *= arch.poorBias;
     s.land *= arch.landBonus;
     s.air *= arch.airBonus;
+    const doctrine = G.ARCHETYPE_DOCTRINES && G.ARCHETYPE_DOCTRINES[arch.id];
+    if (doctrine) Object.keys(doctrine.effects).forEach(function(key){ s[key] += doctrine.effects[key]; });
     state.traitsOwned.forEach(function (id) {
       const t = state.traitById[id];
       if (!t || !t.effects) return;
@@ -114,6 +116,7 @@
       difficulty: opts.difficulty,
       traitById: traitById,
       traitsOwned: [],
+      history: [],
       stats: emptyStats(),
       data: 18,
       day: 0,
@@ -165,7 +168,10 @@
     const c = state.world.countries[countryId];
     if (!c || state.startCountry !== null || state.ended) return false;
     const n = Math.min(c.pop, G.SIM.startPop + Math.floor(c.pop * 0.00001));
-    c.infected = n;
+    const borderSeed = c.neighbors.length >= 4 ? 1.2 : 1;
+    c.infected = Math.min(c.pop, Math.floor(n * borderSeed));
+    state.data += c.wealth <= 2 ? 6 : 0;
+    record(state, "origin", c.iso);
     c.everInfected = true;
     state.startCountry = countryId;
     pushNews(state, "start", { country: c.name });
@@ -177,6 +183,12 @@
     }
     state.uiFx.push({ type: "breach", country: countryId, t: 0 });
     return true;
+  }
+
+  function record(state,type,id) {
+    if (!state.history) state.history=[];
+    state.history.push({day:state.day,type:type,id:id});
+    if(state.history.length>160)state.history.shift();
   }
 
   function headlineById(id) {
@@ -342,6 +354,7 @@
     if (t.effects && t.effects.researchSlow) {
       if (rnd(state) < 0.7) pushNews(state, rnd(state) < 0.5 ? "ks_slowed" : "ks_slowed_funny", {});
     }
+    record(state,"evolution",id);
     state.events.push({ type: "trait", id: id });
     state.uiFx.push({ type: "evolve", id: id, t: 0 });
     return true;
@@ -363,6 +376,7 @@
     state.traitsOwned = state.traitsOwned.filter(function (x) { return x !== id; });
     state.data += refund;
     recomputeStats(state);
+    record(state,"devolve",id);
     state.events.push({ type: "devolve", id: id, refund: refund });
     return true;
   }
@@ -674,6 +688,7 @@
       state.detection += noise;
       if (state.detection >= d.detectThresh || tot.control > 0.18 / s.stealth) {
         state.detected = true;
+        record(state,"detected","detect");
         pushNews(state, "detect", {});
         pushNews(state, "detect_funny", {});
         state.uiFx.push({ type: "detect", t: 0 });
@@ -759,6 +774,7 @@
     }
     if (newLv > state.intelLevel) {
       state.intelLevel = newLv;
+      record(state,"intelligence",String(newLv));
       const id = levels[newLv].id;
       pushNews(state, "intel_" + id, {});
       state.uiFx.push({ type: "intel", level: newLv, t: 0 });
@@ -864,6 +880,7 @@
   function usePower(state, id) {
     if (!powerReady(state, id)) return false;
     const pw = G.ACTIVE_POWERS.find(function (p) { return p.id === id; });
+    record(state,"power",id);
     state.powerCd[id] = pw.cd;
     if (id === "blackout") {
       state.blackoutTimer = 4.5;

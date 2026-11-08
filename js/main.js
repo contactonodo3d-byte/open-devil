@@ -166,14 +166,9 @@
     const id = renderer.hitTest(p[0], p[1], state.world.countries);
     if (mode === "pick") {
       if (id >= 0) {
-        window.Sim.startInCountry(state, id);
-        mode = "play";
-        state.speed = 1;
-        state.paused = false;
-        document.getElementById("pick-banner").classList.add("hidden");
-        ui.showGame();
-        ui.updateHud(state);
-        ui.beep(520, 0.1);
+        document.getElementById("country-select").value=String(id);
+        document.getElementById("country-tools").open=true;
+        document.getElementById("country-select").dispatchEvent(new Event("change"));
       }
       return;
     }
@@ -258,6 +253,18 @@
   const select = document.getElementById("country-select");
   window.WORLD_MAP.countries.map(function(c,i){ return {name:c.n,id:i}; }).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(c){
     const option = document.createElement("option"); option.value=c.id; option.textContent=c.name; select.appendChild(option);
+  });
+  select.addEventListener("change",function(){
+    const preview=document.getElementById("origin-preview");preview.replaceChildren();
+    document.getElementById("country-go").disabled = select.value === "";
+    if(select.value===""||!state)return;
+    const c=state.world.countries[Number(select.value)],profile=window.Strategy.origin(c,state.hubs);
+    const heading=document.createElement("b");heading.textContent=profile.name+" · "+(profile.hub?"International hub":"Regional network");
+    const strengths=document.createElement("p");strengths.textContent=profile.strengths.join(". ")+".";
+    const risk=document.createElement("p");risk.textContent=profile.tradeoff;
+    const bonus=document.createElement("p");bonus.textContent="If chosen as origin: "+(profile.extraData?"+"+profile.extraData+" starting Data":"standard starting Data")+(profile.seedMultiplier>1?"; +20% initial foothold from border access.":"; standard initial foothold.");
+    preview.append(heading,strengths,risk,bonus);
+    document.getElementById("pick-hint").textContent=mode==="pick"?"Review "+c.name+", then press Start here to confirm.":"Inspect a country's network profile.";
   });
   document.getElementById("country-go").onclick = function () {
     if (!state || select.value === "") return;

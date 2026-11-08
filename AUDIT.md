@@ -125,3 +125,20 @@ mapa y el panel no se solapen, que los cuerpos tengan scroll utilizable y que Ba
 y la navegación permanezcan visibles. Nueve pruebas Node cubren simulación/guardado/
 noticias. CSS/JS, precache y build visible comparten versión 4 para evitar mezclar
 HTML nuevo con scripts almacenados de una entrega anterior.
+
+## Build 6: capa estratégica completa
+
+Se agregaron previews numéricos puros para compra/devolución con los mismos límites
+que Sim.recomputeStats; objetivos con todas las condiciones y desigualdades reales,
+incluida la alternativa de control absoluto; impacto y siguiente paso en reportes;
+doctrinas con efectos reales en stats y perfiles/bonos de origen; y revisión final con
+motivo, requisitos faltantes y decisiones registradas. Los historiales antiguos no se
+reconstruyen ni se atribuyen causas hipotéticas a las derrotas.
+
+Pruebas nuevas cubren pureza/exactitud del preview, frontera estricta de Military en
+Shadow, prioridad del Kill Switch, bonos de origen, persistencia del historial y carga
+de guardados antiguos. El recorrido de navegador compra una evolución, consulta
+objetivos, sigue una recomendación desde noticias y verifica el debrief con Restart
+siempre visible. Matriz de 27 campañas: Casual 9/9, Normal 9/9, Brutal 3/9 victorias;
+ambas rutas aparecen. Muestra adicional de 12 campañas combina cuatro orígenes y tres
+arquetipos. Datos de bot con pasos fijos; no constituyen tasas humanas de victoria.

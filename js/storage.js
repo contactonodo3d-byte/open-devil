@@ -31,6 +31,7 @@
       }
       for(const key of Object.keys(state)){
         if(['world','traitById','stats','archetype','difficulty'].includes(key))continue;
+        if(key==="history" && saved[key]===undefined)continue;
         if(!valid(saved[key],state[key]))return null;
         state[key]=saved[key];
       }
@@ -45,6 +46,7 @@
       if(!state.bubbles.every(b=>Number.isFinite(b.x)&&Number.isFinite(b.y)&&Number.isFinite(b.life)&&Number.isFinite(b.value)&&['infect','cure'].includes(b.kind)))return null;
       if(!state.packets.every(p=>Number.isInteger(p.to)&&state.world.countries[p.to]&&Number.isFinite(p.t)&&Number.isFinite(p.dur)))return null;
       if(!Object.values(state.powerCd).every(n=>Number.isFinite(n)&&n>=0))return null;
+      state.history=(state.history||[]).filter(h=>h&&Number.isFinite(h.day)&&h.day>=0&&["origin","evolution","devolve","power","detected","intelligence"].includes(h.type)&&typeof h.id==="string").slice(-160);
       // Only bundled headline text may enter HTML-rendered logs.
       state.news=[];state.newsLog=[];state.events=[];state.uiFx=[];
       state.pendingPopup=null;state.pendingBreaking=null;state.paused=true;state.speed=1;

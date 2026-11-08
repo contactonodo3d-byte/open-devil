@@ -44,6 +44,12 @@
     }
   ];
 
+  G.ARCHETYPE_DOCTRINES = {
+    worm: {name:"Border swarm",desc:"+0.18 land spread; −0.08 stealth. Strong border chains, louder footprint.",effects:{land:0.18,stealth:-0.08}},
+    social: {name:"Quiet influence",desc:"+0.22 stealth; −0.04 spread. More time to capture critical infrastructure quietly.",effects:{stealth:0.22,infectivity:-0.04}},
+    cracker: {name:"Hardened-system assault",desc:"+0.25 wealthy-system spread; +0.10 visibility. Break into valuable systems at greater detection risk.",effects:{rich:0.25,severity:0.10}}
+  };
+
   G.DIFFICULTIES = [
     {
       id: "casual",

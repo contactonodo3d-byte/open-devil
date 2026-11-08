@@ -27,3 +27,25 @@ test('news summaries group repeat events without losing archive entries',()=>{
  const result=feed.update(items,0,false);assert.equal(result.queued,0);assert.equal(result.unread,80);assert.equal(items.length,80);
  feed.reset();assert.equal(feed.update([],0,false).current,null);
 });
+require('../js/strategy.js');
+test('upgrade preview is pure and matches the purchased stats, including caps',()=>{
+ const s=game();s.data=100;const before=JSON.stringify(s),preview=Strategy.preview(s,'email');assert.equal(JSON.stringify(s),before);assert.ok(preview.length);
+ Sim.buyTrait(s,'email');for(const row of preview)assert.equal(s.stats[row.key],row.after);
+ const removal=Strategy.preview(s,'email');Sim.devolveTrait(s,'email');for(const row of removal)assert.equal(s.stats[row.key],row.after);
+});
+test('victory checklist includes strict Shadow military bound, absolute route and Kill Switch precedence',()=>{
+ const s=game(),tot={critical:WIN.shadowInfra,globalAlarm:WIN.shadowAlarmMax,military:WIN.overtMilitary*.95,infra:.7,control:.995};
+ let routes=Strategy.goals(s,tot);assert.equal(routes[0].ready,false);assert.equal(routes[2].ready,true);
+ tot.military-=.001;routes=Strategy.goals(s,tot);assert.equal(routes[0].ready,true);
+ s.killSwitch=1;assert.ok(Strategy.goals(s,tot).every(r=>!r.ready));
+});
+test('origin bonuses and archetype doctrines affect the real simulation',()=>{
+ const s=Sim.createGame(options());const c=s.world.countries.find(c=>c.wealth<=2&&c.neighbors.length>=4);const profile=Strategy.origin(c);const funds=s.data;
+ Sim.startInCountry(s,c.id);assert.equal(s.data,funds+profile.extraData);assert.equal(c.infected,Math.min(c.pop,Math.floor((SIM.startPop+Math.floor(c.pop*.00001))*profile.seedMultiplier)));
+ assert.ok(s.history.some(h=>h.type==='origin'));assert.equal(s.stats.land,s.archetype.landBonus+ARCHETYPE_DOCTRINES[s.archetype.id].effects.land);
+});
+test('postgame timeline survives saves and old saves without it still load',()=>{
+ const s=game();s.data=100;Sim.buyTrait(s,'email');let restored=SaveGame.decode(SaveGame.encode(s));assert.ok(restored.history.some(h=>h.type==='evolution'&&h.id==='email'));
+ const old=JSON.parse(SaveGame.encode(s));delete old.state.history;assert.ok(SaveGame.decode(JSON.stringify(old)));
+ s.ended='lose';s.killSwitch=1;const review=Strategy.debrief(s);assert.match(review.reason,/100%/);assert.ok(review.history.length);assert.ok(review.remaining.length);
+});

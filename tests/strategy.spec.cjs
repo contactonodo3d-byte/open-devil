@@ -1,0 +1,23 @@
+const {test,expect}=require('@playwright/test');
+test('strategic decisions have previews, actual effects, goals and a debrief',async({page},info)=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:8765/index.html');await page.locator('#intro-skip').click();
+ await expect(page.locator('.doctrine')).toHaveCount(3);await page.locator('#btn-begin').click();
+ const id=await page.evaluate(()=>String(WORLD_MAP.countries.findIndex(c=>c.iso==='USA')));
+ await page.locator('#country-select').selectOption(id);await expect(page.locator('#origin-preview')).toContainText('security');
+ expect(await page.evaluate(()=>__OD.getMode())).toBe('pick');
+ await page.locator('#country-go').click();await page.locator('#btn-evo').click();
+ await expect(page.locator('[data-trait="email"] .effect-preview')).toContainText('Spread');
+ const after=await page.evaluate(()=>Strategy.preview(__OD.getState(),'email').find(r=>r.key==='infectivity').after);
+ await page.locator('[data-trait="email"]').click();expect(await page.evaluate(()=>__OD.getState().stats.infectivity)).toBe(after);
+ await page.locator('#btn-stats').click();await expect(page.locator('.goal-route')).toHaveCount(3);
+ await expect(page.locator('.goal-checklist')).toContainText('Absolute control');
+ await page.locator('#btn-news').click();await expect(page.locator('.report-impact').first()).toBeVisible();
+ await page.locator('.report-action').first().click();await expect(page.locator('#news-panel')).toBeHidden();
+ await page.locator('#btn-map').click();
+ await page.evaluate(()=>{const s=__OD.getState();s.ended='lose';s.killSwitch=1;__OD.ui.showEnd(s,Sim.totals(s));});
+ await expect(page.locator('.debrief')).toContainText('100%');await expect(page.locator('.decision-timeline')).toContainText('Email Phishing');
+ await expect(page.locator('#restart')).toBeInViewport();
+ await page.screenshot({path:`test-results/strategy-debrief-${info.project.name}.png`});
+ expect(errors).toEqual([]);
+});
