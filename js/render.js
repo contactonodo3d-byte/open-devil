@@ -427,6 +427,11 @@
       /* base land — night earth */
       ctx.fillStyle = pickMode ? "#263b4b" : "#1b3040";
       ctx.fill(path);
+      const infection = Math.max(0, Math.min(1, c.infected / Math.max(1, c.pop)));
+      if (!pickMode && c.infected > 0) {
+        ctx.fillStyle = "rgba(255,65,95," + (0.22 + infection * 0.65) + ")";
+        ctx.fill(path);
+      }
       ctx.strokeStyle = "rgba(140,190,210,0.28)";
       ctx.lineWidth = 0.7 / view.scale;
       ctx.stroke(path);

@@ -131,7 +131,7 @@
     const dx = p[0] - lastX;
     const dy = p[1] - lastY;
     if (Math.hypot(p[0] - startX, p[1] - startY) > 6) dragMoved = true;
-    renderer.pan(dx, dy);
+    if (dragMoved) renderer.pan(dx, dy);
     lastX = p[0];
     lastY = p[1];
     e.preventDefault();
@@ -270,7 +270,7 @@
     document.getElementById("country-tools").open = false;
     if (!choosingOrigin) ui.showCountry(state,id);
     ui.updateHud(state);
-    renderer.focusOn(c.centroid[0],c.centroid[1],renderer.getView().scale,0.4);
+    // Selecting a country never moves the player-controlled camera.
   };
   function zoom(factor) { renderer.zoomAt(canvas.clientWidth/2,canvas.clientHeight/2,factor); }
   document.getElementById("zoom-in").onclick=function(){zoom(1.3);};

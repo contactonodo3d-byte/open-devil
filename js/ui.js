@@ -459,7 +459,13 @@
       newsTime = now;
       if (result.current && result.current !== displayedHeadline) {
         displayedHeadline = result.current;
-        els.news.textContent = displayedHeadline.text.replace(/^BREAKING:\s*/, "");
+        const text = displayedHeadline.text.replace(/^BREAKING:\s*/, "");
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const previous = els.news.textContent;
+        if (previous && !reduced) {
+          const exit = els.news.animate([{opacity:1,transform:"translateY(0)"},{opacity:0,transform:"translateY(-5px)"}],{duration:180});
+          exit.onfinish = function(){ els.news.textContent=text; els.news.animate([{opacity:0,transform:"translateY(5px)"},{opacity:1,transform:"translateY(0)"}],{duration:240}); };
+        } else els.news.textContent = text;
         $("ticker-category").textContent = importantReport(displayedHeadline) ? "PRIORITY REPORT" : "SITUATION REPORT";
       }
       if (newsOpen) feed.markRead();
@@ -549,6 +555,9 @@
 
       setSpeed(state.paused ? 0 : state.speed);
 
+      const evolvable = G.TRAITS.some(function(trait){return G.Sim.canBuyTrait(state,trait.id);});
+      els.evoToggle.classList.toggle("available", evolvable);
+      els.evoToggle.setAttribute("aria-label", evolvable ? "Evolve, upgrade available" : "Evolve");
       updateNews(state);
 
       const panelKey = [Math.floor(state.time * 4), state.data, state.traitsOwned.join(","), state.intelLevel].join(":");
