@@ -163,7 +163,7 @@
 
   function startInCountry(state, countryId) {
     const c = state.world.countries[countryId];
-    if (!c) return false;
+    if (!c || state.startCountry !== null || state.ended) return false;
     const n = Math.min(c.pop, G.SIM.startPop + Math.floor(c.pop * 0.00001));
     c.infected = n;
     c.everInfected = true;
@@ -318,6 +318,7 @@
   }
 
   function canBuyTrait(state, id) {
+    if (state.ended) return false;
     const t = state.traitById[id];
     if (!t) return false;
     if (state.traitsOwned.indexOf(id) >= 0) return false;
@@ -347,6 +348,7 @@
   }
 
   function canDevolve(state, id) {
+    if (state.ended) return false;
     if (state.traitsOwned.indexOf(id) < 0) return false;
     /* cannot devolve if something depends on it */
     return !G.TRAITS.some(function (t) {
@@ -479,6 +481,7 @@
   }
 
   function tapBubble(state, bubbleId) {
+    if (state.ended) return null;
     const i = state.bubbles.findIndex(function (b) { return b.id === bubbleId; });
     if (i < 0) return null;
     const b = state.bubbles[i];
@@ -727,8 +730,8 @@
     const infectedM = tot.infected / 1e6;
     const fin = countOwnedSectors(state, "finance");
     const cloud = countOwnedSectors(state, "cloud");
-    const sectorBonus = 1 + fin * 0.045 + cloud * 0.055;
-    const gain = (G.SIM.baseIncome + infectedM * G.SIM.incomePerInfectedM) * st.income * d.incomeMult * sectorBonus * intelMult(state) * dt;
+    const sectorBonus = 1 + Math.sqrt(fin) * 0.045 + Math.sqrt(cloud) * 0.055;
+    const gain = (G.SIM.baseIncome + (infectedM / (1 + infectedM / 80)) * G.SIM.incomePerInfectedM) * st.income * d.incomeMult * sectorBonus * intelMult(state) * dt;
     state.lastIncomeAcc += gain;
     if (state.lastIncomeAcc >= 1) {
       const add = Math.floor(state.lastIncomeAcc);
@@ -849,6 +852,7 @@
   }
 
   function powerReady(state, id) {
+    if (state.ended) return false;
     const pw = (G.ACTIVE_POWERS || []).find(function (p) { return p.id === id; });
     if (!pw) return false;
     if ((state.powerCd[id] || 0) > 0) return false;
@@ -948,6 +952,7 @@
 
   function checkEnd(state, tot) {
     if (state.ended) return;
+    if (state.killSwitch >= 1) { state.ended="lose"; state.paused=true; return; }
     const W = G.WIN || {};
     /* Shadow / Quiet Singularity — critical infra without lighting the board on fire */
     if (tot.critical >= (W.shadowInfra || 0.58) &&
@@ -986,7 +991,8 @@
   }
 
   function tick(state, realDt) {
-    if (state.ended || state.paused || state.speed <= 0) {
+    if (!Number.isFinite(realDt) || realDt <= 0 || state.startCountry === null ||
+        state.ended || state.paused || state.speed <= 0) {
       /* still age bubbles visually? skip */
       return totals(state);
     }
@@ -1013,11 +1019,12 @@
     state.world.countries.forEach(function (c) { stepCountry(state, c, dt); });
     tryAirSeed(state, dt);
 
-    const tot = totals(state);
+    let tot = totals(state);
     stepDetectionResearch(state, dt, tot);
     stepIncome(state, dt, tot);
     stepIntelligence(state, dt, tot);
     stepDefenses(state, dt, tot);
+    tot = totals(state);
     tickPowerCds(state, dt);
     checkMilestones(state, tot);
     maybeFlavor(state, realDt);
