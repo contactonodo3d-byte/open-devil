@@ -262,6 +262,16 @@
       entry[0].setAttribute("aria-expanded", "false");
       entry[0].addEventListener("click", function () { openSheet(entry[1], entry[0]); });
     });
+    // A deliberate tap on the map returns to play; do not also select a country.
+    $("map-wrap").addEventListener("pointerdown", function (event) {
+      if (!activePanel || event.target.closest("button")) return;
+      event.preventDefault(); event.stopImmediatePropagation();
+      closeSheets(true, false);
+    }, true);
+    document.addEventListener("pointerdown", function(event) {
+      const tools = $("country-tools");
+      if (tools.open && !tools.contains(event.target)) tools.open = false;
+    });
     $("btn-map").onclick = function () { closeSheets(true, false); };
     function updateNavigation(kind) {
       [[$("btn-map"),"map"],[els.evoToggle,"evo"],[els.statsToggle,"stats"],[els.newsToggle,"news"]].forEach(function(entry){
