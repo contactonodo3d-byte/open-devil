@@ -1,5 +1,5 @@
-const CACHE='open-devil-v6';
-const FILES=['./?v=6','index.html?v=6','style.css','manifest.json','assets/icon.svg','assets/world.svg','js/worldmap.js','js/data.js','js/sim.js','js/render.js','js/ui.js','js/strategy.js','js/news.js','js/storage.js','js/main.js'].map(path => /\.(js|css)$/.test(path) ? path + '?v=6' : path);
+const CACHE='open-devil-v7';
+const FILES=['./?v=7','index.html?v=7','style.css','manifest.json','assets/icon.svg','assets/world.svg','js/worldmap.js','js/data.js','js/locales/data.js','js/locales/news.js','js/locales/ui.js','js/locales/countries.js','js/i18n.js','js/sim.js','js/render.js','js/ui.js','js/strategy.js','js/news.js','js/storage.js','js/main.js'].map(path => /\.(js|css)$/.test(path) ? path + '?v=7' : path);
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('open-devil-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

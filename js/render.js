@@ -265,7 +265,7 @@
       }
       floaters.push({
         x: wx, y: wy, vy: -28, life: 1.1,
-        text: kind === "infect" ? ("+" + value) : "↓KS",
+        text: kind === "infect" ? ("+" + value) : (G.I18n && G.I18n.language!=="en" ? "↓INT" : "↓KS"),
         col: kind === "infect" ? "#ffcc66" : "#7ec8ff"
       });
     }

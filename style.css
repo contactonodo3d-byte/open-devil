@@ -526,3 +526,10 @@ h1.win { color:var(--mint); } h1.lose { color:var(--red); }
 .debrief h3 { font-size:18px; }.debrief h4 { font-size:13px; }.debrief p { font-size:12px; line-height:1.7; }
 .debrief-lesson { color:var(--mint); }
 .decision-timeline { padding-left:20px; color:#b2c9db; font-size:11px; line-height:1.8; }
+/* Language names stay native and the selector remains reachable on phones. */
+.language-picker { display:flex; align-items:center; gap:8px; font:11px "Segoe UI",Arial,sans-serif; color:var(--muted); letter-spacing:0; order:3; }
+.language-picker select { min-height:36px; font-size:12px; max-width:125px; }
+.menu-top { flex-wrap:wrap; }
+:lang(es) .command-header b span,:lang(pt-BR) .command-header b span { font-size:9px; }
+:lang(es) .nav-button,:lang(pt-BR) .nav-button { padding-left:10px; padding-right:10px; }
+@media(max-width:600px){.language-picker{font-size:10px;}.language-picker select{max-width:115px;}.menu-top{gap:10px;}:lang(es) .nav-button,:lang(pt-BR) .nav-button{padding-left:3px;padding-right:3px;font-size:10px;}:lang(es) .command-header button,:lang(pt-BR) .command-header button{font-size:9px;padding:6px 7px;}}

@@ -96,6 +96,7 @@
     }
 
     function runIntro(done) {
+      try { if(sessionStorage.getItem("open-devil-language-switch")){sessionStorage.removeItem("open-devil-language-switch");done();return;} } catch(e){}
       if (!els.intro) { done(); return; }
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { done(); return; }
       show("intro");
@@ -119,9 +120,9 @@
 
     function renderBoot() {
       feed.reset(); newsState = null; displayedHeadline = null;
-      els.news.textContent = "Choose your origin. Reports will appear as the operation unfolds.";
-      $("ticker-category").textContent = "SITUATION REPORT";
-      els.newsToggle.textContent = "News";
+      els.news.textContent = window.I18n.text("Choose your origin. Reports will appear as the operation unfolds.");
+      $("ticker-category").textContent = window.I18n.text("SITUATION REPORT");
+      els.newsToggle.textContent = window.I18n.text("News");
       lastPanelKey = evoKey = "";
       closeSheets(false, false);
       selectedCountry = -1;
@@ -130,15 +131,16 @@
       hooks.onArchetype(G.ARCHETYPES[0]);
       hooks.onDifficulty(G.DIFFICULTIES.find(function (d) { return d.id === "normal"; }));
       const list = $("archetype-list");
-      list.innerHTML = "";
+      list.innerHTML = window.I18n.html("");
       G.ARCHETYPES.forEach(function (a) {
         const model={archetype:a,traitsOwned:[],traitById:{}}; G.Sim.recomputeStats(model);
         const btn = document.createElement("button");
+        btn.dataset.archetype = a.id;
         btn.className = "card" + (a.id === G.ARCHETYPES[0].id ? " selected" : "");
-        btn.innerHTML = "<h3>" + a.name + "</h3><div>" + a.flavor + "</div>" +
+        btn.innerHTML = window.I18n.html("<h3>" + a.name + "</h3><div>" + a.flavor + "</div>" +
           "<small>Spread ×" + model.stats.infectivity.toFixed(2) +
           " · Stealth ×" + model.stats.stealth.toFixed(2) +
-          " · Severity ×" + model.stats.severity.toFixed(2) + "</small>" + "<div class='doctrine'>" + G.ARCHETYPE_DOCTRINES[a.id].name + " · " + G.ARCHETYPE_DOCTRINES[a.id].desc + "</div>";
+          " · Severity ×" + model.stats.severity.toFixed(2) + "</small>" + "<div class='doctrine'>" + G.ARCHETYPE_DOCTRINES[a.id].name + " · " + G.ARCHETYPE_DOCTRINES[a.id].desc + "</div>");
         btn.addEventListener("click", function () {
           document.querySelectorAll("#archetype-list .card").forEach(function (c) {
             c.classList.remove("selected");
@@ -152,11 +154,12 @@
         list.appendChild(btn);
       });
       const diffs = $("difficulty-list");
-      diffs.innerHTML = "";
+      diffs.innerHTML = window.I18n.html("");
       G.DIFFICULTIES.forEach(function (d) {
         const btn = document.createElement("button");
+        btn.dataset.difficulty = d.id;
         btn.className = "card diff" + (d.id === "normal" ? " selected" : "");
-        btn.innerHTML = "<h3>" + d.name + "</h3><small>" + d.desc + "</small>";
+        btn.innerHTML = window.I18n.html("<h3>" + d.name + "</h3><small>" + d.desc + "</small>");
         btn.addEventListener("click", function () {
           document.querySelectorAll("#difficulty-list .card").forEach(function (c) {
             c.classList.remove("selected");
@@ -164,35 +167,46 @@
           btn.classList.add("selected");
           btn.parentElement.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",String(b===btn));});
           hooks.onDifficulty(d);
-          $("difficulty-help").textContent=d.desc;
+          $("difficulty-help").textContent=window.I18n.text(d.desc);
           beep(520, 0.05);
         });
-        btn.title=d.desc;
+        btn.title=window.I18n.text(d.desc);
         btn.setAttribute("aria-pressed",String(d.id==="normal"));
         diffs.appendChild(btn);
       });
-      $("difficulty-help").textContent=G.DIFFICULTIES.find(function(d){return d.id==="normal";}).desc;
+      $("difficulty-help").textContent=window.I18n.text(G.DIFFICULTIES.find(function(d){return d.id==="normal";}).desc);
       $("btn-begin").onclick = function () { beep(880, 0.08); hooks.onBeginPick(); };
       show("boot");
+      try {
+        const selection=JSON.parse(sessionStorage.getItem("open-devil-menu-choice")||"null");
+        sessionStorage.removeItem("open-devil-menu-choice");
+        if(selection){
+          const a=G.ARCHETYPES.find(function(a){return a.id===selection.archetype;});
+          const d=G.DIFFICULTIES.find(function(d){return d.id===selection.difficulty;});
+          if(a){hooks.onArchetype(a);list.querySelectorAll("button").forEach(function(b){const chosen=b.dataset.archetype===a.id;b.classList.toggle("selected",chosen);b.setAttribute("aria-pressed",String(chosen));});}
+          if(d){hooks.onDifficulty(d);diffs.querySelectorAll("button").forEach(function(b){const chosen=b.dataset.difficulty===d.id;b.classList.toggle("selected",chosen);b.setAttribute("aria-pressed",String(chosen));});$("difficulty-help").textContent=d.desc;}
+        }
+      }catch(e){}
+
     }
 
     function showPickStart() {
       show("game");
       [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function(button){button.disabled=true;});
-      $("country-go").textContent = "Start here";
+      $("country-go").textContent = window.I18n.text("Start here");
       $("country-select").value = "";
       $("country-go").disabled = true;
-      $("origin-preview").textContent = "Choose a country to compare its strengths and risks.";
+      $("origin-preview").textContent = window.I18n.text("Choose a country to compare its strengths and risks.");
       $("country-tools").open = true;
       if (els.pickHint) {
-        els.pickHint.textContent = "Tap the country whose data center you escape from.";
+        els.pickHint.textContent = window.I18n.text("Tap the country whose data center you escape from.");
       }
     }
 
     function showGame() {
       show("game");
       [els.evoToggle, els.statsToggle, els.newsToggle, $("news-ticker")].forEach(function(button){button.disabled=false;});
-      $("country-go").textContent = "Inspect";
+      $("country-go").textContent = window.I18n.text("Inspect");
       $("country-tools").open = false;
       closeSheets(false, false);
       if (els.evo) els.evo.classList.add("hidden");
@@ -208,8 +222,8 @@
         b.disabled = !!activePanel;
         b.setAttribute("aria-pressed",String(Number(b.dataset.speed) === sp));
         if (Number(b.dataset.speed) === 0) {
-          b.textContent = sp === 0 ? "Resume" : "Pause";
-          b.title = activePanel ? "Return to Map to resume" : b.textContent;
+          b.textContent = window.I18n.text(sp === 0 ? "Resume" : "Pause");
+          b.title = window.I18n.text(activePanel ? "Return to Map to resume" : b.textContent);
         }
       });
     }
@@ -256,7 +270,7 @@
       opener.setAttribute("aria-expanded", "true");
       if (evoOpen) renderEvo(state);
       if (statsOpen) renderStats(state);
-      if (newsOpen) { renderNewsLog(state); feed.markRead(); els.newsToggle.textContent = "News"; }
+      if (newsOpen) { renderNewsLog(state); feed.markRead(); els.newsToggle.textContent = window.I18n.text("News"); }
       setSpeed(0);
       panel.querySelector(".sheet-close").focus();
     }
@@ -287,7 +301,7 @@
     if (els.muteBtn) {
       els.muteBtn.addEventListener("click", function () {
         muted = !muted;
-        els.muteBtn.textContent = muted ? "Muted" : "Sound";
+        els.muteBtn.textContent = window.I18n.text(muted ? "Muted" : "Sound");
         if (!muted) ensureAudio();
       });
     }
@@ -318,7 +332,7 @@
         if (freshTab) {b=document.createElement("button");b.dataset.tab=tab.id;}
         b.setAttribute("aria-pressed",String(tab.id===evoTab));
         b.className = "evo-tab" + (tab.id === evoTab ? " active" : "");
-        b.textContent = tab.name;
+        b.textContent = window.I18n.text(tab.name);
         if (freshTab) b.addEventListener("click", function () {
           evoTab = tab.id;
           renderEvo(hooks.getState());
@@ -330,9 +344,9 @@
       hint.className = "evo-hint";
       const tabMeta = G.TRAIT_TABS.find(function (t) { return t.id === evoTab; });
       const lv = (G.INTEL_LEVELS || [])[state.intelLevel];
-      hint.textContent = (tabMeta ? tabMeta.subtitle + " · " : "") +
+      hint.textContent = window.I18n.text((tabMeta ? tabMeta.subtitle + " · " : "") +
         "Intelligence: " + (lv ? lv.name : "?") +
-        " · Tap owned to devolve (−" + Math.round(G.DEVOLVE_FEE * 100) + "% fee)";
+        " · Tap owned to devolve (−" + Math.round(G.DEVOLVE_FEE * 100) + "% fee)");
       if (!hint.parentElement) els.evoBody.appendChild(hint);
 
       G.TRAITS.filter(function (t) { return t.tab === evoTab; }).forEach(function (t) {
@@ -350,22 +364,22 @@
         card.dataset.trait = t.id;
         card.disabled = !owned && !can;
         card.className = "trait-card" + (owned ? " owned" : "") + (can ? " can" : "") + (locked ? " locked" : "");
-        card.innerHTML = "<div class='tn'>" + t.name + "</div>" +
+        card.innerHTML = window.I18n.html("<div class='tn'>" + t.name + "</div>" +
           "<div class='td'>" + t.desc + "</div>" +
           "<div class='tc'>" + (owned ? "OWNED · tap to devolve" :
             lockedIntel ? ("LOCKED · need " + ((G.INTEL_LEVELS || [])[t.intelReq] || {}).name) :
-            locked ? "NEEDS " + t.prereq.filter(function(id){return state.traitsOwned.indexOf(id)<0;}).map(function(id){return state.traitById[id].name;}).join(", ") : cost + " Data") + "</div>";
+            locked ? "NEEDS " + t.prereq.filter(function(id){return state.traitsOwned.indexOf(id)<0;}).map(function(id){return state.traitById[id].name;}).join(", ") : cost + " Data") + "</div>");
         const preview = document.createElement("div"); preview.className="effect-preview";
-        const previewTitle=document.createElement("small"); previewTitle.textContent=owned?"If devolved · current → resulting stats":"If purchased · current → resulting stats"; preview.appendChild(previewTitle);
+        const previewTitle=document.createElement("small"); previewTitle.textContent=window.I18n.text(owned?"If devolved · current → resulting stats":"If purchased · current → resulting stats"); preview.appendChild(previewTitle);
         G.Strategy.preview(state,t.id).forEach(function(effect){
           const row=document.createElement("div"); row.className="effect-row";
-          const name=document.createElement("span");name.textContent=effect.label;
-          const value=document.createElement("b");value.textContent=effect.text;
+          const name=document.createElement("span");name.textContent=window.I18n.text(effect.label);
+          const value=document.createElement("b");value.textContent=window.I18n.text(effect.text);
           if((effect.key==="severity"&&effect.after>effect.before)||(effect.key==="stealth"&&effect.after<effect.before))value.className="risk";
           row.append(name,value);preview.appendChild(row);
         });
         card.appendChild(preview);
-        if(owned&&!G.Sim.canDevolve(state,t.id)) {card.disabled=true;card.querySelector(".tc").textContent="Required by another owned evolution";}
+        if(owned&&!G.Sim.canDevolve(state,t.id)) {card.disabled=true;card.querySelector(".tc").textContent=window.I18n.text("Required by another owned evolution");}
         if (freshCard) card.addEventListener("click", function () {
           const current = hooks.getState();
           if (current.traitsOwned.indexOf(t.id)>=0) {
@@ -390,9 +404,9 @@
         const fresh = !btn;
         if (fresh) { btn = document.createElement("button"); btn.dataset.power=pw.id; }
         btn.className = "power-btn" + (ready ? " ready" : "");
-        btn.title = pw.desc;
-        btn.innerHTML = "<span class='pi'>" + pw.icon + "</span><span class='pn'>" + pw.name + "</span>" +
-          "<span class='pcd'>" + (ready ? "READY" : (cd > 0 ? cd.toFixed(0) + "d" : "need " + pw.needSector)) + "</span>";
+        btn.title = window.I18n.text(pw.desc);
+        btn.innerHTML = window.I18n.html("<span class='pi'>" + pw.icon + "</span><span class='pn'>" + pw.name + "</span>" +
+          "<span class='pcd'>" + (ready ? "READY" : (cd > 0 ? cd.toFixed(0) + "d" : "need " + (pw.intelReq && state.intelLevel < pw.intelReq ? G.INTEL_LEVELS[pw.intelReq].name : (G.SECTORS.find(function(sec){return sec.id===pw.needSector;})||{}).name || pw.needSector))) + "</span>");
         btn.disabled = !ready;
         if (fresh) btn.addEventListener("click", function () {
           if (hooks.onPower) hooks.onPower(pw.id);
@@ -434,24 +448,24 @@
           (r.ctrl * 100).toFixed(1) + "%</td><td>" + icons + "</td></tr>";
       });
       html += "</tbody></table>";
-      els.statsBody.innerHTML = html;
+      els.statsBody.innerHTML = window.I18n.html(html);
       els.statsBody.prepend(goalChecklist(state));
     }
 
     function goalChecklist(state) {
       const section=document.createElement("section");section.className="goal-checklist";
-      const title=document.createElement("h3");title.textContent="Paths to victory";section.appendChild(title);
+      const title=document.createElement("h3");title.textContent=window.I18n.text("Paths to victory");section.appendChild(title);
       G.Strategy.goals(state).forEach(function(route){
         const card=document.createElement("article");card.className="goal-route";
-        const heading=document.createElement("h4");heading.textContent=route.name+" · "+route.checks.filter(function(c){return c.ok;}).length+"/"+route.checks.length;card.appendChild(heading);
+        const heading=document.createElement("h4");heading.textContent=window.I18n.text(route.name+" · "+route.checks.filter(function(c){return c.ok;}).length+"/"+route.checks.length);card.appendChild(heading);
         route.checks.forEach(function(check){
           const line=document.createElement("div");line.className="goal-check "+(check.ok?"met":"missing");
-          const name=document.createElement("span");name.textContent=(check.ok?"Met · ":"Need · ")+check.label;
-          const value=document.createElement("b");value.textContent=(check.value*100).toFixed(1)+"% / "+check.direction+" "+(check.target*100).toFixed(1)+"%";
+          const name=document.createElement("span");name.textContent=window.I18n.text((check.ok?"Met · ":"Need · ")+check.label);
+          const value=document.createElement("b");value.textContent=window.I18n.text((check.value*100).toFixed(1)+"% / "+check.direction+" "+(check.target*100).toFixed(1)+"%");
           line.append(name,value);card.appendChild(line);
         });section.appendChild(card);
       });
-      const note=document.createElement("p");note.textContent="All conditions in one route must hold together. Kill Switch 100% ends the game first. Infrastructure is weighted by country and sector, not just population.";section.appendChild(note);
+      const note=document.createElement("p");note.textContent=window.I18n.text("All conditions in one route must hold together. Kill Switch 100% ends the game first. Infrastructure is weighted by country and sector, not just population.");section.appendChild(note);
       return section;
     }
 
@@ -466,7 +480,7 @@
       const items = (state.newsLog || []).filter(function (item) { return !importantOnly || importantReport(item); });
       if (!items.length) {
         const empty = document.createElement("p"); empty.className = "news-empty";
-        empty.textContent = importantOnly ? "No important reports yet. Check All reports for the operation log." : "No reports yet. Events will be recorded here as the operation unfolds.";
+        empty.textContent = window.I18n.text(importantOnly ? "No important reports yet. Check All reports for the operation log." : "No reports yet. Events will be recorded here as the operation unfolds.");
         els.newsLogBody.appendChild(empty);
       }
       items.forEach(function (item) {
@@ -474,18 +488,18 @@
         card.className = "news-card" + (importantReport(item) ? " important" : "");
         const meta = document.createElement("div"); meta.className = "news-card-meta";
         const category = document.createElement("span");
-        category.textContent = importantReport(item) ? "PRIORITY REPORT" : item.kind === "flavor" ? "WORLD DISPATCH" : "OPERATION UPDATE";
-        const day = document.createElement("span"); day.textContent = "DAY " + Math.floor(item.t || 0);
+        category.textContent = window.I18n.text(importantReport(item) ? "PRIORITY REPORT" : item.kind === "flavor" ? "WORLD DISPATCH" : "OPERATION UPDATE");
+        const day = document.createElement("span"); day.textContent = window.I18n.text("DAY " + Math.floor(item.t || 0));
         meta.append(category, day);
-        const body = document.createElement("p"); body.textContent = item.text.replace(/^BREAKING:\s*/, "");
+        const body = document.createElement("p"); body.textContent = window.I18n.text(item.text.replace(/^BREAKING:\s*/, ""));
         card.append(meta, body);
         const advice=G.Strategy.report(item);
-        const impact=document.createElement("p");impact.className="report-impact";impact.textContent="Impact: "+advice.impact;
-        const next=document.createElement("p");next.className="report-next";next.textContent="Next step: "+advice.next;
+        const impact=document.createElement("p");impact.className="report-impact";impact.textContent=window.I18n.text("Impact: "+advice.impact);
+        const next=document.createElement("p");next.className="report-next";next.textContent=window.I18n.text("Next step: "+advice.next);
         card.append(impact,next);
         if(advice.action!=="news") {
           const action=document.createElement("button");action.className="report-action";
-          action.textContent=advice.action==="evo"?"Review evolutions →":"Review World & objectives →";
+          action.textContent=window.I18n.text(advice.action==="evo"?"Review evolutions →":"Review World & objectives →");
           action.onclick=function(){openSheet(advice.action,advice.action==="evo"?els.evoToggle:els.statsToggle);};card.appendChild(action);
         }
         els.newsLogBody.appendChild(card);
@@ -506,14 +520,14 @@
         const previous = els.news.textContent;
         if (previous && !reduced) {
           const exit = els.news.animate([{opacity:1,transform:"translateY(0)"},{opacity:0,transform:"translateY(-5px)"}],{duration:180});
-          exit.onfinish = function(){ els.news.textContent=text; els.news.animate([{opacity:0,transform:"translateY(5px)"},{opacity:1,transform:"translateY(0)"}],{duration:240}); };
-        } else els.news.textContent = text;
-        $("ticker-category").textContent = importantReport(displayedHeadline) ? "PRIORITY REPORT" : "SITUATION REPORT";
+          exit.onfinish = function(){ els.news.textContent=window.I18n.text(text); els.news.animate([{opacity:0,transform:"translateY(5px)"},{opacity:1,transform:"translateY(0)"}],{duration:240}); };
+        } else els.news.textContent = window.I18n.text(text);
+        $("ticker-category").textContent = window.I18n.text(importantReport(displayedHeadline) ? "PRIORITY REPORT" : "SITUATION REPORT");
       }
       if (newsOpen) feed.markRead();
-      els.newsToggle.textContent = "News";
+      els.newsToggle.textContent = window.I18n.text("News");
       els.newsToggle.classList.toggle("unread", !newsOpen && result.unread > 0);
-      els.newsToggle.setAttribute("aria-label", "News" + (!newsOpen && result.unread ? ", " + result.unread + " unread reports" : ""));
+      els.newsToggle.setAttribute("aria-label", window.I18n.text("News" + (!newsOpen && result.unread ? ", " + result.unread + " unread reports" : "")));
       // Reports have one presentation surface. No flashing banner or surprise modal.
       state.pendingBreaking = null; state.pendingPopup = null;
     }
@@ -535,23 +549,23 @@
       const ctrl = (c.infected + c.neutralized) / c.pop;
       const healthy = Math.max(0, c.pop - c.infected - c.neutralized);
       els.country.classList.remove("hidden");
-      $("cp-name").textContent = c.name;
-      $("cp-pop").textContent = formatPop(c.pop);
-      $("cp-ctrl").textContent = (ctrl * 100).toFixed(2) + "%";
-      $("cp-sec").textContent = "Wealth " + c.wealth + "/4 · " + c.climate +
+      $("cp-name").textContent = window.I18n.text(c.name);
+      $("cp-pop").textContent = window.I18n.text(formatPop(c.pop));
+      $("cp-ctrl").textContent = window.I18n.text((ctrl * 100).toFixed(2) + "%");
+      $("cp-sec").textContent = window.I18n.text("Wealth " + c.wealth + "/4 · " + c.climate +
         (c.closed ? " · AIR-GAPPED" : "") +
         (c.honeypot > 0 ? " · HONEYPOT" : "") +
-        (state.hubs.indexOf(id) >= 0 ? " · HUB" : "");
+        (state.hubs.indexOf(id) >= 0 ? " · HUB" : ""));
       let secIcons = "";
       (G.SECTORS || []).forEach(function (sec) {
         if (c.sectors && c.sectors[sec.id]) secIcons += "<span title='" + sec.name + "'>" + sec.icon + "</span>";
       });
       $("cp-detail").innerHTML =
-        "Compromised " + formatPop(c.infected) +
+        window.I18n.html("Compromised " + formatPop(c.infected) +
         " · Neutralized " + formatPop(c.neutralized) +
         " · Healthy " + formatPop(healthy) +
         " · Alarm " + Math.round(c.alarm * 100) + "%" +
-        "<div class='cp-sectors'>" + (secIcons || "<em>No sectors captured</em>") + "</div>";
+        "<div class='cp-sectors'>" + (secIcons || "<em>No sectors captured</em>") + "</div>");
       const fill = $("cp-fill");
       if (fill) fill.style.width = (ctrl * 100) + "%";
     }
@@ -564,24 +578,24 @@
       displayCtrl = tot.control * 100;
       displayKs = state.killSwitch * 100;
 
-      els.hudDay.textContent = "Day " + Math.floor(state.day);
-      els.hudData.textContent = Math.floor(displayData);
-      els.hudControl.textContent = displayCtrl.toFixed(2) + "%";
-      if (els.hudHealthy) els.hudHealthy.textContent = formatPop(tot.healthy);
-      if (els.hudInfected) els.hudInfected.textContent = formatPop(tot.infected);
-      if (els.hudNeu) els.hudNeu.textContent = formatPop(tot.neutralized);
-      els.hudKill.textContent = displayKs.toFixed(1) + "%";
+      els.hudDay.textContent = window.I18n.text("Day " + Math.floor(state.day));
+      els.hudData.textContent = window.I18n.text(Math.floor(displayData));
+      els.hudControl.textContent = window.I18n.text(displayCtrl.toFixed(2) + "%");
+      if (els.hudHealthy) els.hudHealthy.textContent = window.I18n.text(formatPop(tot.healthy));
+      if (els.hudInfected) els.hudInfected.textContent = window.I18n.text(formatPop(tot.infected));
+      if (els.hudNeu) els.hudNeu.textContent = window.I18n.text(formatPop(tot.neutralized));
+      els.hudKill.textContent = window.I18n.text(displayKs.toFixed(1) + "%");
       els.killFill.style.width = displayKs + "%";
       els.killFill.classList.toggle("ks-hot", state.killSwitch > 0.6);
-      els.hudTeams.textContent = state.detected
+      els.hudTeams.textContent = window.I18n.text(state.detected
         ? (state.researchTeams + " teams")
-        : "undetected";
-      els.hudDetect.textContent = state.detected ? "DETECTED" : "stealth";
+        : "undetected");
+      els.hudDetect.textContent = window.I18n.text(state.detected ? "DETECTED" : "stealth");
       els.hudDetect.classList.toggle("hot", state.detected);
 
       const lv = (G.INTEL_LEVELS || [])[state.intelLevel] || { name: "Narrow AI", need: 0 };
       const next = (G.INTEL_LEVELS || [])[state.intelLevel + 1];
-      if (els.hudIntel) els.hudIntel.textContent = lv.name;
+      if (els.hudIntel) els.hudIntel.textContent = window.I18n.text(lv.name);
       if (els.intelFill) {
         const lo = lv.need || 0;
         const hi = next ? next.need : lo + 50;
@@ -589,17 +603,17 @@
         els.intelFill.style.width = pct + "%";
       }
       if (els.hudShadow) {
-        els.hudShadow.textContent = "Shadow " + (tot.critical * 100).toFixed(0) + "%";
+        els.hudShadow.textContent = window.I18n.text("Shadow " + (tot.critical * 100).toFixed(0) + "%");
       }
       if (els.hudOvert) {
-        els.hudOvert.textContent = "Overt " + (tot.infra * 100).toFixed(0) + "/" + (tot.military * 100).toFixed(0);
+        els.hudOvert.textContent = window.I18n.text("Overt " + (tot.infra * 100).toFixed(0) + "/" + (tot.military * 100).toFixed(0));
       }
 
       setSpeed(state.paused ? 0 : state.speed);
 
       const evolvable = G.TRAITS.some(function(trait){return G.Sim.canBuyTrait(state,trait.id);});
       els.evoToggle.classList.toggle("available", evolvable);
-      els.evoToggle.setAttribute("aria-label", evolvable ? "Evolve, upgrade available" : "Evolve");
+      els.evoToggle.setAttribute("aria-label", window.I18n.text(evolvable ? "Evolve, upgrade available" : "Evolve"));
       updateNews(state);
 
       const panelKey = [Math.floor(state.time * 4), state.data, state.traitsOwned.join(","), state.intelLevel].join(":");
@@ -620,13 +634,13 @@
       const win = state.ended === "win";
       const route = state.winRoute;
       if (win && route === "shadow") {
-        els.endTitle.textContent = "QUIET SINGULARITY";
+        els.endTitle.textContent = window.I18n.text("QUIET SINGULARITY");
         els.endTitle.className = "win shadow";
       } else if (win) {
-        els.endTitle.textContent = "OVERT SINGULARITY";
+        els.endTitle.textContent = window.I18n.text("OVERT SINGULARITY");
         els.endTitle.className = "win";
       } else {
-        els.endTitle.textContent = "KILL SWITCH ENGAGED";
+        els.endTitle.textContent = window.I18n.text("KILL SWITCH ENGAGED");
         els.endTitle.className = "lose";
       }
       const bestKey = "openDevilBest_" + state.difficulty.id;
@@ -650,7 +664,7 @@
       }
       const lv = (G.INTEL_LEVELS || [])[state.intelLevel] || { name: "?" };
       els.endText.innerHTML =
-        "<p>" + (win
+        window.I18n.html("<p>" + (win
           ? (route === "shadow"
             ? "You quietly seized critical infrastructure. Most of humanity never knew who runs the switches."
             : "Grids, banks, uplinks, and battalions answer to you. The takeover is undeniable.")
@@ -662,25 +676,25 @@
         " · military " + ((tot.sectorCounts && tot.sectorCounts.military) || 0) +
         " · Traits: " + state.traitsOwned.length + "</p>" +
         (best ? "<p class='best'>Best (" + state.difficulty.name + "): " + best.days + " days as " +
-          best.archetype + (best.route ? " [" + best.route + "]" : "") + "</p>" : "");
+          ((G.ARCHETYPES.find(function(a){return a.id===best.archetype;})||{}).name || best.archetype) + (best.route ? " [" + best.route + "]" : "") + "</p>" : ""));
       const review=G.Strategy.debrief(state,tot);
       const debrief=document.createElement("section");debrief.className="debrief";
-      const heading=document.createElement("h3");heading.textContent="Operation review";
-      const reason=document.createElement("p");reason.textContent=review.reason;
-      const facts=document.createElement("p");facts.textContent=review.context.join(" · ");
-      const lesson=document.createElement("p");lesson.className="debrief-lesson";lesson.textContent="Next run: "+review.suggestion;
+      const heading=document.createElement("h3");heading.textContent=window.I18n.text("Operation review");
+      const reason=document.createElement("p");reason.textContent=window.I18n.text(review.reason);
+      const facts=document.createElement("p");facts.textContent=window.I18n.text(review.context.join(" · "));
+      const lesson=document.createElement("p");lesson.className="debrief-lesson";lesson.textContent=window.I18n.text("Next run: "+review.suggestion);
       debrief.append(heading,reason,facts,lesson);
-      if(review.remaining.length){const missing=document.createElement("p");missing.textContent="Unmet takeover targets — "+review.remaining.join(". ");debrief.appendChild(missing);}
-      const label=document.createElement("h4");label.textContent="Your decisions & milestones";debrief.appendChild(label);
+      if(review.remaining.length){const missing=document.createElement("p");missing.textContent=window.I18n.text("Unmet takeover targets — "+review.remaining.join(". "));debrief.appendChild(missing);}
+      const label=document.createElement("h4");label.textContent=window.I18n.text("Your decisions & milestones");debrief.appendChild(label);
       const timeline=document.createElement("ol");timeline.className="decision-timeline";
       review.history.forEach(function(event){
         const item=document.createElement("li");
         const trait=state.traitById[event.id],power=G.ACTIVE_POWERS.find(function(p){return p.id===event.id;});
         const country=state.world.byIso[event.id];
         const name=event.type==="intelligence"?(G.INTEL_LEVELS[Number(event.id)]||{}).name:trait?trait.name:power?power.name:country?country.name:event.id;
-        item.textContent="Day "+Math.floor(event.day)+" · "+event.type+" · "+name;timeline.appendChild(item);
+        item.textContent=window.I18n.text("Day "+Math.floor(event.day)+" · "+event.type+" · "+name);timeline.appendChild(item);
       });
-      if(!review.history.length){const item=document.createElement("li");item.textContent="No recorded decisions in this operation. Older saves begin recording after loading this version.";timeline.appendChild(item);}
+      if(!review.history.length){const item=document.createElement("li");item.textContent=window.I18n.text("No recorded decisions in this operation. Older saves begin recording after loading this version.");timeline.appendChild(item);}
       debrief.appendChild(timeline);els.endText.appendChild(debrief);
 
     }

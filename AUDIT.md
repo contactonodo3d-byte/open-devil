@@ -142,3 +142,13 @@ objetivos, sigue una recomendación desde noticias y verifica el debrief con Res
 siempre visible. Matriz de 27 campañas: Casual 9/9, Normal 9/9, Brutal 3/9 victorias;
 ambas rutas aparecen. Muestra adicional de 12 campañas combina cuatro orígenes y tres
 arquetipos. Datos de bot con pasos fijos; no constituyen tasas humanas de victoria.
+
+## Build 7: idiomas
+
+Selector persistente English/Español/Português en el menú, preferencia inicial del
+navegador, parámetro lang y atributo lang accesible. Catálogos locales para interfaz,
+manual, estrategias, países, nombres/descripciones y los 192 titulares. Se mantienen
+los parámetros de las plantillas y todos los IDs de simulación. No se invoca una API
+de traducción. El cambio de idioma conserva la operación guardada y las opciones del
+menú. Pruebas específicas verifican ambos idiomas en escritorio/touch, los enlaces
+entre paneles, la continuación y la integridad de los catálogos.

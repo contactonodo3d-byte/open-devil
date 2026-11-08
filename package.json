@@ -1,9 +1,9 @@
 {
   "name": "open-devil",
   "version": "1.0.0",
-  "description": "A Plague Inc.\u2013inspired **rogue-AI takeover** game that runs entirely in the browser (`file://`, GitHub Pages, iPhone Safari). Vanilla HTML5 Canvas / JS / CSS \u2014 no build step, no runtime network fetches.",
+  "description": "A Plague Inc.–inspired **rogue-AI takeover** game that runs entirely in the browser (`file://`, GitHub Pages, iPhone Safari). Vanilla HTML5 Canvas / JS / CSS — no build step, no runtime network fetches.",
   "scripts": {
-    "test": "node --test tests/sim.test.cjs",
+    "test": "node --test tests/*.test.cjs",
     "test:browser": "playwright test",
     "balance": "node scripts/balance.js"
   },
@@ -19,7 +19,9 @@
   },
   "homepage": "https://github.com/contactonodo3d-byte/open-devil#readme",
   "devDependencies": {
-    "@playwright/test": "^1.64.1"
+    "@playwright/test": "^1.64.1",
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5"
   },
   "private": true
 }

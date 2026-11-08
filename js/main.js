@@ -218,7 +218,7 @@
         saveElapsed += dt;
         if (saveElapsed >= 10) { window.SaveGame.write(state); saveElapsed = 0; }
         state.events.length = 0;
-        document.getElementById("operation-status").textContent = state.paused ? "OPERATION PAUSED" : state.detected ? "DETECTED · Humanity is responding" : "UNDETECTED · Expand your network";
+        document.getElementById("operation-status").textContent = window.I18n.text(state.paused ? "OPERATION PAUSED" : state.detected ? "DETECTED · Humanity is responding" : "UNDETECTED · Expand your network");
         if (state.ended) {
           window.SaveGame.clear();
           ui.showEnd(state, window.Sim.totals(state));
@@ -235,7 +235,7 @@
   function refreshContinue() {
     const saved = window.SaveGame.read();
     document.getElementById("btn-continue").classList.toggle("hidden", !saved);
-    document.getElementById("save-status").textContent = saved ? "Saved operation · Day " + Math.floor(saved.day) + " · " + saved.difficulty.name : "";
+    document.getElementById("save-status").textContent = window.I18n.text(saved ? "Saved operation · Day " + Math.floor(saved.day) + " · " + saved.difficulty.name : "");
   }
   document.getElementById("btn-continue").onclick = function () {
     const saved = window.SaveGame.read(); if (!saved) { refreshContinue(); return; }
@@ -245,26 +245,26 @@
     ui.updateHud(state);
   };
   document.getElementById("btn-menu").onclick = function () {
-    const saved = window.SaveGame.write(state);
     if (state) state.paused = true;
+    const saved = window.SaveGame.write(state);
     mode = "boot"; ui.renderBoot(); refreshContinue();
-    if (!saved && state && state.startCountry !== null && !state.ended) document.getElementById("save-status").textContent = "Saving is unavailable in this browser. Keep this tab open.";
+    if (!saved && state && state.startCountry !== null && !state.ended) document.getElementById("save-status").textContent = window.I18n.text("Saving is unavailable in this browser. Keep this tab open.");
   };
   const select = document.getElementById("country-select");
   window.WORLD_MAP.countries.map(function(c,i){ return {name:c.n,id:i}; }).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(c){
-    const option = document.createElement("option"); option.value=c.id; option.textContent=c.name; select.appendChild(option);
+    const option = document.createElement("option"); option.value=c.id; option.textContent=window.I18n.text(c.name); select.appendChild(option);
   });
   select.addEventListener("change",function(){
     const preview=document.getElementById("origin-preview");preview.replaceChildren();
     document.getElementById("country-go").disabled = select.value === "";
     if(select.value===""||!state)return;
     const c=state.world.countries[Number(select.value)],profile=window.Strategy.origin(c,state.hubs);
-    const heading=document.createElement("b");heading.textContent=profile.name+" · "+(profile.hub?"International hub":"Regional network");
-    const strengths=document.createElement("p");strengths.textContent=profile.strengths.join(". ")+".";
-    const risk=document.createElement("p");risk.textContent=profile.tradeoff;
-    const bonus=document.createElement("p");bonus.textContent="If chosen as origin: "+(profile.extraData?"+"+profile.extraData+" starting Data":"standard starting Data")+(profile.seedMultiplier>1?"; +20% initial foothold from border access.":"; standard initial foothold.");
+    const heading=document.createElement("b");heading.textContent=window.I18n.text(profile.name+" · "+(profile.hub?"International hub":"Regional network"));
+    const strengths=document.createElement("p");strengths.textContent=window.I18n.text(profile.strengths.join(". ")+".");
+    const risk=document.createElement("p");risk.textContent=window.I18n.text(profile.tradeoff);
+    const bonus=document.createElement("p");bonus.textContent=window.I18n.text("If chosen as origin: "+(profile.extraData?"+"+profile.extraData+" starting Data":"standard starting Data")+(profile.seedMultiplier>1?"; +20% initial foothold from border access.":"; standard initial foothold."));
     preview.append(heading,strengths,risk,bonus);
-    document.getElementById("pick-hint").textContent=mode==="pick"?"Review "+c.name+", then press Start here to confirm.":"Inspect a country's network profile.";
+    document.getElementById("pick-hint").textContent=window.I18n.text(mode==="pick"?"Review "+c.name+", then press Start here to confirm.":"Inspect a country's network profile.");
   });
   document.getElementById("country-go").onclick = function () {
     if (!state || select.value === "") return;
@@ -299,7 +299,7 @@
   document.getElementById("btn-help").onclick=openGuide;
   document.getElementById("guide-close").onclick=document.getElementById("guide-done").onclick=function(){guide.close();};
   const w=window.WIN;
-  document.getElementById("guide-thresholds").textContent="Shadow: critical infrastructure ≥ "+Math.round(w.shadowInfra*100)+"%, alarm ≤ "+Math.round(w.shadowAlarmMax*100)+"%, Kill Switch ≤ "+Math.round(w.shadowKsMax*100)+"%. Overt: infrastructure ≥ "+Math.round(w.overtInfra*100)+"%, military ≥ "+Math.round(w.overtMilitary*100)+"%.";
+  document.getElementById("guide-thresholds").textContent=window.I18n.text("Shadow: critical infrastructure ≥ "+Math.round(w.shadowInfra*100)+"%, alarm ≤ "+Math.round(w.shadowAlarmMax*100)+"%, Kill Switch ≤ "+Math.round(w.shadowKsMax*100)+"%. Overt: infrastructure ≥ "+Math.round(w.overtInfra*100)+"%, military ≥ "+Math.round(w.overtMilitary*100)+"%.");
   document.addEventListener("keydown",function(e){
     if (guide.open || /INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName)) return;
     if(mode!=="play" || ui.isPanelOpen())return;

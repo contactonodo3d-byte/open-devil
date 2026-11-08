@@ -156,3 +156,20 @@ and begin recording new actions; pre-update decisions are never invented.
 Run `node scripts/balance-origins.cjs` for the 12-run origin/archetype sample in addition
 to the 27-run difficulty matrix. Both use a diagnostic bot and fixed simulation steps;
 they do not estimate human win rates.
+
+## Languages (build 7)
+
+Choose **English**, **Español** or **Português** from the main menu. The game uses the
+saved choice; on a first visit it follows a supported browser language or uses English.
+`?lang=en`, `?lang=es` and `?lang=pt` explicitly choose a language. Portuguese uses
+Brazilian terminology and `pt-BR` country names. The selector retains its native names.
+
+Changing language refreshes the menu, preserving the selected archetype/difficulty and
+saved operation. Continue resumes paused. IDs and mechanics remain language-independent.
+The interface, manual, strategy explanations, upgrade descriptions, country names,
+192 news templates and postgame review are translated using bundled catalogs; no
+translation API is called. Catalog tests check coverage and placeholder preservation.
+`js/i18n.js` translates presentation expressions synchronously; simulation IDs and
+saved numeric values are never translated. `scripts/localize-source.cjs` is an
+idempotent development helper for wrapping new presentation assignments. Add new text
+to `js/locales/ui.js` or the appropriate data/news catalog when extending the game.

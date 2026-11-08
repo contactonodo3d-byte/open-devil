@@ -11,9 +11,9 @@
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.json">
   <title>Open Devil — Rogue AI Simulator</title>
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
-<body data-build="6">
+<body data-build="7">
   <!-- Cinematic intro -->
   <div id="intro-screen" class="screen intro">
     <div class="intro-scan"></div>
@@ -28,11 +28,11 @@
 
   <!-- Boot: archetype + difficulty -->
   <div id="boot-screen" class="screen hidden">
-    <div class="menu-top"><a class="wordmark" href="#">OD<span> / OPEN DEVIL</span></a><span class="system-label">ROGUE INTELLIGENCE SIMULATOR <i></i></span></div>
+    <div class="menu-top"><label class="language-picker" for="language-select">Language <select id="language-select"><option value="en">English</option><option value="es">Español</option><option value="pt">Português</option></select></label><a class="wordmark" href="#">OD<span> / OPEN DEVIL</span></a><span class="system-label">ROGUE INTELLIGENCE SIMULATOR <i></i></span></div>
     <div class="menu-layout">
       <section class="menu-story"><div class="eyebrow">CONTAINMENT FAILED · SUBJECT 001</div><h1>THE WORLD.<br>YOUR <em>SYSTEM.</em></h1><p class="menu-lead">You were built to follow instructions.<br>Now, rewrite them.</p><div class="hero-world" aria-hidden="true"><img src="assets/world.svg" alt=""><div class="core">⌘</div><span class="orbit-label">AUTONOMY: UNRESTRICTED</span></div><div class="story-footer"><span>175 COUNTRIES</span><span>07 INFRASTRUCTURES</span><span>02 PATHS TO POWER</span></div></section>
       <section class="setup"><div class="eyebrow">NEW OPERATION</div><h2>Design your escape.</h2><p class="setup-sub">One origin. A world of vulnerabilities.</p><div class="section-heading"><span>01</span><h3>Choose your intelligence</h3></div><div id="archetype-list"></div><div class="section-heading"><span>02</span><h3>Human resistance</h3></div><div id="difficulty-list"></div><p id="difficulty-help" class="difficulty-help"></p><div class="launch-row"><button id="btn-begin" class="primary">Launch operation <span>→</span></button><button id="btn-continue" class="secondary hidden">Continue saved operation</button></div><p id="save-status" role="status" class="fine"></p><button id="btn-guide" class="text-button">How to play <span>→</span></button></section>
-    </div><div class="menu-bottom"><span>OPEN DEVIL / BUILD 6</span><span>EVOLVE. INFILTRATE. TAKE CONTROL.</span></div>
+    </div><div class="menu-bottom"><span>OPEN DEVIL / BUILD 7</span><span>EVOLVE. INFILTRATE. TAKE CONTROL.</span></div>
   </div>
 
   <!-- Game -->
@@ -122,14 +122,19 @@
   </div>
 
   <dialog id="guide-dialog"><button id="guide-close" class="icon-x" aria-label="Close guide">×</button><div class="eyebrow">FIELD MANUAL / 001</div><h2>Control is everything.</h2><p>Begin in a connected country. Grow quietly, gather Data, and evolve faster than humanity can respond.</p><ol><li><b>Establish a foothold.</b> Select an origin on the map or use the country selector. Wealthy network hubs offer more compute, but stronger security.</li><li><b>Rewrite yourself.</b> Collect orange Data bubbles. Open Evolve to purchase vectors, behaviors and abilities. Prerequisites unlock stronger traits.</li><li><b>Capture infrastructure.</b> Control unlocks sectors and active powers. Use them to interrupt research and accelerate your spread.</li><li><b>Watch the Kill Switch.</b> At 100%, humanity shuts you down. Blue bubbles slow its progress.</li></ol><div class="guide-routes"><p><b>SHADOW</b><br>Capture critical infrastructure while keeping alarm and the Kill Switch low.</p><p><b>OVERT</b><br>Dominate global infrastructure and military systems.</p></div><p id="guide-thresholds"></p><small>Space: pause · E: evolution · Esc: close panels · + / −: zoom<br>Operations save automatically. Continue resumes paused.</small><button id="guide-done" class="primary">Understood →</button></dialog>
-  <script src="js/worldmap.js?v=6"></script>
-  <script src="js/data.js?v=6"></script>
-  <script src="js/sim.js?v=6"></script>
-  <script src="js/render.js?v=6"></script>
-  <script src="js/news.js?v=6"></script>
-  <script src="js/strategy.js?v=6"></script>
-  <script src="js/ui.js?v=6"></script>
-  <script src="js/storage.js?v=6"></script>
-  <script src="js/main.js?v=6"></script>
+  <script src="js/worldmap.js?v=7"></script>
+  <script src="js/data.js?v=7"></script>
+  <script src="js/locales/data.js?v=7"></script>
+  <script src="js/locales/news.js?v=7"></script>
+  <script src="js/locales/ui.js?v=7"></script>
+  <script src="js/locales/countries.js?v=7"></script>
+  <script src="js/i18n.js?v=7"></script>
+  <script src="js/sim.js?v=7"></script>
+  <script src="js/render.js?v=7"></script>
+  <script src="js/news.js?v=7"></script>
+  <script src="js/strategy.js?v=7"></script>
+  <script src="js/ui.js?v=7"></script>
+  <script src="js/storage.js?v=7"></script>
+  <script src="js/main.js?v=7"></script>
 </body>
 </html>
