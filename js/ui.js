@@ -243,7 +243,36 @@
       });
     });
 
+    function setEvolutionExpanded(expanded) {
+      els.game.classList.toggle("evo-expanded",expanded);
+      const grip=$("evo-expand");
+      grip.setAttribute("aria-expanded",String(expanded));
+      grip.querySelector(".grip-label").textContent=window.I18n.text(expanded?"Swipe down to shrink":"Swipe up to expand");
+    }
+    // Restrict dragging to the handle so reading and scrolling never resize the panel.
+    const grip=$("evo-expand");
+    let gripStart=null,ignoreGripClick=false;
+    grip.addEventListener("pointerdown",function(event){
+      if(!event.isPrimary||event.button!==0)return;
+      ignoreGripClick=false;
+      gripStart={x:event.clientX,y:event.clientY,id:event.pointerId};
+      grip.setPointerCapture(event.pointerId);
+    });
+    grip.addEventListener("pointerup",function(event){
+      if(!gripStart||event.pointerId!==gripStart.id)return;
+      const dx=event.clientX-gripStart.x,dy=event.clientY-gripStart.y;gripStart=null;
+      if(Math.abs(dy)>=32&&Math.abs(dy)>Math.abs(dx)*1.2){
+        setEvolutionExpanded(dy<0);ignoreGripClick=true;
+      }
+    });
+    grip.addEventListener("pointercancel",function(){gripStart=null;});
+    grip.addEventListener("click",function(event){
+      if(event.detail&&ignoreGripClick){ignoreGripClick=false;return;}
+      setEvolutionExpanded(!els.game.classList.contains("evo-expanded"));
+    });
+
     function closeSheets(resume, restoreFocus) {
+      setEvolutionExpanded(false);
       const state = hooks.getState();
       if (resume !== false && state && state === panelState && !state.ended) {
         state.paused = panelWasPaused || document.hidden;
@@ -264,6 +293,7 @@
       const state = hooks.getState();
       if (!state || state.startCountry === null || state.ended) return;
       const panel = kind === "evo" ? els.evo : kind === "stats" ? els.stats : els.newsPanel;
+      if(kind!=="evo")setEvolutionExpanded(false);
       if (activePanel === panel) { closeSheets(); return; }
       if (!activePanel) { panelWasPaused = state.paused; panelState = state; }
       state.paused = true;

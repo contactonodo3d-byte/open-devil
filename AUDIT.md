@@ -186,3 +186,6 @@ SVG persistente, selección y acceso al país. No se alteró el balance de simul
 
 ## Build 10 — matching strategy workspaces
 Evolution, World, News, country details, guide and debrief now share the approved crimson command design. Evolution shows real Data, owned count, icon categories, cost and explicit purchase/devolve states; tab switches reset content scroll. World goals have progress meters and news has SVG report badges. Persistent exits and independent scrolling remain.
+
+## Build 11 — expandable evolution reading workspace
+A dedicated handle supports upward/downward pointer swipes and tap/keyboard toggling. Expanded evolution uses the game viewport, hides the map/HUD and keeps navigation and Back to map accessible. Trait scrolling does not trigger resizing; closing or switching workspaces restores the compact layout. Localized handle instructions in English, Spanish and Portuguese.

@@ -6,6 +6,6 @@ module.exports=defineConfig({
  projects:[
   {name:'desktop',use:{browserName:'chromium',launchOptions,viewport:{width:1280,height:800}}},
   {name:'mobile',use:{browserName:'chromium',launchOptions,viewport:{width:390,height:844},isMobile:true,hasTouch:true}},
-  {name:'safari-menu',testMatch:'menu-overflow.spec.cjs',use:{browserName:'webkit',viewport:{width:390,height:700},isMobile:true,hasTouch:true}}
+  {name:'safari-menu',testMatch:['menu-overflow.spec.cjs','evolution-expand.spec.cjs'],use:{browserName:'webkit',viewport:{width:390,height:700},isMobile:true,hasTouch:true}}
  ]
 });
