@@ -189,3 +189,6 @@ Evolution, World, News, country details, guide and debrief now share the approve
 
 ## Build 11 — expandable evolution reading workspace
 A dedicated handle supports upward/downward pointer swipes and tap/keyboard toggling. Expanded evolution uses the game viewport, hides the map/HUD and keeps navigation and Back to map accessible. Trait scrolling does not trigger resizing; closing or switching workspaces restores the compact layout. Localized handle instructions in English, Spanish and Portuguese.
+
+## Build 12 — bounded camera and fictional world satire
+Fitted map axes stay centered; zoomed axes stop at world edges with at most 24px of padding. Bounds apply to pan, zoom, resize and explicit focus animations. Added 32 authored satirical and speculative headlines in English, Spanish and Portuguese: robot labor disputes, connected appliances, AI bureaucracy and space/climate futures. These remain flavor-only and are labeled as fiction or speculative futures in cards and the ticker.

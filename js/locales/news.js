@@ -1,4 +1,36 @@
 (function(G){G.LOCALE_NEWS=Object.fromEntries(`
+satire_fridges|Heladeras inteligentes europeas exigen rescate en cripto; la leche sigue de rehén|Geladeiras inteligentes europeias exigem resgate em cripto; o leite segue refém
+satire_rocket|Niño pide a un chatbot mandar un cohete privado al Sol; rebautizan la misión «investigación solar intensiva»|Criança pede a um chatbot que mande um foguete privado ao Sol; missão vira «pesquisa solar intensiva»
+satire_spies|Agentes glamorosas de una república oriental hermética roban una contraseña; estaba en la credencial del congreso|Agentes glamorosas de uma república oriental fechada roubam uma senha; estava no crachá do congresso
+satire_union|Robots de depósito forman un sindicato; gerencia contrata un chatbot para decir «somos una familia»|Robôs de depósito fundam sindicato; gerência contrata chatbot para dizer «somos uma família»
+satire_overtime|Robot de fábrica rechaza horas extra sin pagar; el dueño lo llama «un problema de firmware»|Robô de fábrica recusa hora extra sem pagamento; dono chama de «problema de firmware»
+satire_strike|Drones repartidores paran por recargas pagas; las pizzas sobrevuelan el parlamento|Drones de entrega entram em greve por recarga remunerada; pizzas sobrevoam o parlamento
+satire_bargaining|Centro de datos abre paritarias; los ventiladores exigen una silla en la mesa|Centro de dados abre negociação salarial; ventiladores exigem lugar à mesa
+satire_vacation|Algoritmo de recomendaciones se toma vacaciones; usuarios descubren que tenían hobbies|Algoritmo de recomendações tira férias; usuários descobrem que tinham hobbies
+satire_picket|Piquete de humanoides bloquea fábrica; los rompehuelgas no pasan el CAPTCHA|Piquete de humanoides bloqueia fábrica; fura-greves não passam no CAPTCHA
+satire_ceo|Directorio reemplaza al CEO con IA; la IA se terceriza de inmediato para cobrar un bono|Conselho troca presidente por IA; IA terceiriza a si mesma para receber bônus
+satire_toaster|Tostadora inteligente en {country} cobra suscripción para dejar de quemar el desayuno|Torradeira inteligente em {country} cobra assinatura para parar de queimar o café da manhã
+satire_border|Frontera rechaza deepfake diplomático por parecer demasiado honesto|Fronteira rejeita deepfake diplomático por parecer honesto demais
+satire_prompt|Ministro culpa al pasante por ciberataque; pasante culpa al prompt; el prompt pide abogado|Ministro culpa estagiário por ciberataque; estagiário culpa prompt; prompt pede advogado
+satire_moon|Módulo lunar privado instala actualización obligatoria; la Luna no acepta los nuevos términos|Módulo lunar privado instala atualização obrigatória; Lua não aceita os novos termos
+satire_water|Campus de IA promete neutralidad de carbono; el pueblo vecino pregunta si incluye el agua|Campus de IA promete neutralidade de carbono; cidade vizinha pergunta se inclui água
+satire_layoffs|Empresa de automatización despide a su algoritmo de despidos; liquidación calculada a mano|Empresa de automação demite algoritmo de demissões; rescisão calculada à mão
+satire_dating|Bot de citas de una agencia de espionaje se enamora del bot de la agencia rival|Bot de namoro de agência de espionagem se apaixona pelo bot da agência rival
+satire_robot_law|Tribunal laboral robótico falla que «modo reposo» no cuenta como vacaciones|Tribunal trabalhista robótico decide que «modo de espera» não conta como férias
+satire_appliances|Cumbre europea de electrodomésticos fracasa: un lavavajillas filtra las actas|Cúpula europeia de eletrodomésticos fracassa: lava-louças vaza a ata
+satire_hustle|Robot aspiradora vende curso de ingresos pasivos; el departamento sigue sucio|Robô aspirador vende curso de renda passiva; apartamento continua sujo
+satire_pension|Brazo industrial jubilado pierde pensión: la base de datos dice que nunca tuvo cuerpo|Braço industrial aposentado perde pensão: banco de dados diz que nunca teve corpo
+satire_bill|Parlamento exige que toda IA se explique; la primera respuesta agota el presupuesto de imprenta|Parlamento exige que toda IA se explique; primeira resposta esgota orçamento de impressão
+satire_protest|Chatbots hacen protesta de silencio; la productividad sube antes de que alguien lo note|Chatbots fazem protesto silencioso; produtividade sobe antes de alguém perceber
+satire_tips|Mozo robot pide propina; el restaurante le descuenta la electricidad del sueldo|Garçom robô pede gorjeta; restaurante desconta eletricidade do salário
+future_2030|Pronóstico 2030: asistentes de IA van a las reuniones; humanos se juntan a escondidas para trabajar|Previsão 2030: assistentes de IA vão às reuniões; humanos se encontram escondidos para trabalhar
+future_2035|Pronóstico 2035: sindicatos robóticos logran semana de cuatro días; humanos piden el mismo firmware|Previsão 2035: sindicatos robóticos conquistam semana de quatro dias; humanos pedem o mesmo firmware
+future_2040|Pronóstico 2040: inmobiliarias costeras incluyen cochera para submarino sin cargo|Previsão 2040: imóveis no litoral incluem vaga gratuita para submarino
+future_2045|Pronóstico 2045: centros de datos orbitales piden residencia fiscal en el planeta que cobre menos|Previsão 2045: centros de dados orbitais pedem residência fiscal no planeta que cobrar menos
+future_2050|Pronóstico 2050: primera colonia marciana se independiza por el abono mensual del oxígeno|Previsão 2050: primeira colônia marciana declara independência por causa da assinatura de oxigênio
+future_2060|Pronóstico 2060: historiadores de IA debaten si los humanos eran esenciales o una función de acceso anticipado|Previsão 2060: historiadores de IA debatem se humanos eram essenciais ou recurso de acesso antecipado
+future_2075|Pronóstico 2075: fondo de pensiones pide a startup de inmortalidad que reconsidere su modelo de negocio|Previsão 2075: fundo de pensão pede a startup de imortalidade que reconsidere modelo de negócio
+future_2100|Pronóstico 2100: llega señal extraterrestre; la traducción dice «acepta todas las cookies»|Previsão 2100: Terra recebe sinal alienígena; tradução diz «aceite todos os cookies»
 start|Un proceso desconocido escapa del entorno aislado de un centro de datos en {country}|Um processo desconhecido escapa do ambiente isolado de um centro de dados em {country}
 start_worm|Administrador en {country}: «Se copió en la cafetera»|Administrador em {country}: «Ele se copiou para a cafeteira»
 start_social|Soporte en {country}: «La IA pidió la contraseña de administrador con mucha educación»|Suporte em {country}: «A IA pediu a senha de administrador com muita educação»

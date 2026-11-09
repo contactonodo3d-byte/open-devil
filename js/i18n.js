@@ -62,7 +62,7 @@
   try{localStorage.setItem('open-devil-language',code);sessionStorage.setItem('open-devil-language-switch','1');
    sessionStorage.setItem('open-devil-menu-choice',JSON.stringify({archetype:document.querySelector('#archetype-list .selected')?.dataset.archetype,difficulty:document.querySelector('#difficulty-list .selected')?.dataset.difficulty}));
   }catch(e){}
-  const url=new URL(location.href);url.searchParams.set('lang',code);url.searchParams.set('v','11');location.replace(url.href);
+  const url=new URL(location.href);url.searchParams.set('lang',code);url.searchParams.set('v','12');location.replace(url.href);
  }
  G.I18n={language,text,html,setLanguage};
  document.documentElement.lang=language==='pt'?'pt-BR':language;

@@ -1,4 +1,6 @@
 (function(G){G.LOCALE_UI=`
+SATIRE / FICTION|SÁTIRA / FICCIÓN|SÁTIRA / FICÇÃO
+SPECULATIVE FUTURE|FUTURO ESPECULATIVO|FUTURO ESPECULATIVO
 Swipe up to expand|Desliza hacia arriba para ampliar|Deslize para cima para ampliar
 Swipe down to shrink|Desliza hacia abajo para reducir|Deslize para baixo para reduzir
 OWNED|ADQUIRIDA|ADQUIRIDA

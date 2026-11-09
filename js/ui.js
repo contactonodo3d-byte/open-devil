@@ -528,6 +528,12 @@
       return item.kind !== "flavor" && !/_funny$/.test(item.id || "") && (item.breaking || item.priority >= 70);
     }
 
+    function reportCategory(item){
+      if(importantReport(item))return "PRIORITY REPORT";
+      if(/^future_/.test(item.id||""))return "SPECULATIVE FUTURE";
+      if(/^satire_/.test(item.id||""))return "SATIRE / FICTION";
+      return item.kind==="flavor"?"WORLD DISPATCH":"OPERATION UPDATE";
+    }
     function renderNewsLog(state) {
       if (!els.newsLogBody || !state) return;
       els.newsLogBody.replaceChildren();
@@ -543,7 +549,7 @@
         card.className = "news-card" + (importantReport(item) ? " important" : "");
         const meta = document.createElement("div"); meta.className = "news-card-meta";
         const category = document.createElement("span");
-        category.textContent = window.I18n.text(importantReport(item) ? "PRIORITY REPORT" : item.kind === "flavor" ? "WORLD DISPATCH" : "OPERATION UPDATE");
+        category.textContent = window.I18n.text(reportCategory(item));
         const day = document.createElement("span"); day.textContent = window.I18n.text("DAY " + Math.floor(item.t || 0));
         const badge=document.createElement("span");badge.className="report-badge";badge.innerHTML=icon("news");meta.append(badge,category, day);
         const body = document.createElement("p"); body.textContent = window.I18n.text(item.text.replace(/^BREAKING:\s*/, ""));
@@ -577,7 +583,7 @@
           const exit = els.news.animate([{opacity:1,transform:"translateY(0)"},{opacity:0,transform:"translateY(-5px)"}],{duration:180});
           exit.onfinish = function(){ els.news.textContent=window.I18n.text(text); els.news.animate([{opacity:0,transform:"translateY(5px)"},{opacity:1,transform:"translateY(0)"}],{duration:240}); };
         } else els.news.textContent = window.I18n.text(text);
-        $("ticker-category").textContent = window.I18n.text(importantReport(displayedHeadline) ? "PRIORITY REPORT" : "SITUATION REPORT");
+        $("ticker-category").textContent = window.I18n.text(reportCategory(displayedHeadline));
       }
       if (newsOpen) feed.markRead();
       els.newsToggle.classList.toggle("unread", !newsOpen && result.unread > 0);

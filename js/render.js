@@ -174,10 +174,12 @@
       canvas.style.height = cssH + "px";
       camAnim = null;
       if (!center) { fit(); return; }
-      // Layout changes preserve the player's location and zoom.
-      view.minScale = Math.min(cssW * 0.92 / mapW, cssH * 0.92 / mapH) * 0.85;
+      // Preserve the location and zoom within the visible world bounds.
+      view.minScale = Math.min(cssW * 0.92 / mapW, cssH * 0.92 / mapH);
+      view.scale=Math.max(view.minScale,view.scale);
       view.x = cssW / 2 - center[0] * view.scale;
       view.y = cssH / 2 - center[1] * view.scale;
+      constrainView();
     }
 
     function fit() {
@@ -186,7 +188,7 @@
       const pad = 0.92;
       const sx = (cssW * pad) / mapW;
       const sy = (cssH * pad) / mapH;
-      view.minScale = Math.min(sx, sy) * 0.85;
+      view.minScale = Math.min(sx, sy);
       view.scale = Math.min(sx, sy);
       view.x = (cssW - mapW * view.scale) / 2;
       view.y = (cssH - mapH * view.scale) / 2;
@@ -198,7 +200,17 @@
     function screenToWorld(sx, sy) {
       return [(sx - view.x) / view.scale, (sy - view.y) / view.scale];
     }
-    function pan(dx, dy) { camAnim = null; view.x += dx; view.y += dy; }
+    function constrainView() {
+      // A fitted axis stays centered; a zoomed axis can pan only to its edges.
+      function bound(position,viewport,extent){
+        if(extent<=viewport)return (viewport-extent)/2;
+        const margin=Math.min(24,viewport*.04);
+        return Math.max(viewport-extent-margin,Math.min(margin,position));
+      }
+      view.x=bound(view.x,cssW,mapW*view.scale);
+      view.y=bound(view.y,cssH,mapH*view.scale);
+    }
+    function pan(dx, dy) { camAnim = null; view.x += dx; view.y += dy; constrainView(); }
     function zoomAt(sx, sy, factor) {
       camAnim = null;
       const before = screenToWorld(sx, sy);
@@ -206,6 +218,7 @@
       const after = screenToWorld(sx, sy);
       view.x += (after[0] - before[0]) * view.scale;
       view.y += (after[1] - before[1]) * view.scale;
+      constrainView();
     }
 
     function focusOn(wx, wy, scale, dur) {
@@ -563,6 +576,7 @@
         view.x = camAnim.x0 + (camAnim.x1 - camAnim.x0) * e;
         view.y = camAnim.y0 + (camAnim.y1 - camAnim.y0) * e;
         view.scale = camAnim.s0 + (camAnim.s1 - camAnim.s0) * e;
+        constrainView();
         if (u >= 1) camAnim = null;
       }
       /* particles */
