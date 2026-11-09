@@ -1,4 +1,6 @@
 (function(G){G.LOCALE_UI=`
+Play animation|Reproducir animación|Reproduzir animação
+Pause animation|Pausar animación|Pausar animação
 SATIRE / FICTION|SÁTIRA / FICCIÓN|SÁTIRA / FICÇÃO
 SPECULATIVE FUTURE|FUTURO ESPECULATIVO|FUTURO ESPECULATIVO
 Swipe up to expand|Desliza hacia arriba para ampliar|Deslize para cima para ampliar

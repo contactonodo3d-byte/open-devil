@@ -192,3 +192,6 @@ A dedicated handle supports upward/downward pointer swipes and tap/keyboard togg
 
 ## Build 12 — bounded camera and fictional world satire
 Fitted map axes stay centered; zoomed axes stop at world edges with at most 24px of padding. Bounds apply to pan, zoom, resize and explicit focus animations. Added 32 authored satirical and speculative headlines in English, Spanish and Portuguese: robot labor disputes, connected appliances, AI bureaucracy and space/climate futures. These remain flavor-only and are labeled as fiction or speculative futures in cards and the ticker.
+
+## Build 13 — temporary Firefly globe animation
+User-supplied 1280×720, 24fps, 10.04s clip encoded as VP9 WebM (901269 bytes) and fast-start H.264 MP4 (1227223 bytes), without audio. Menu-only lazy playback, inline silent loop, pause control, visibility suspension, reduced-motion static fallback. Videos are optional network assets, excluded from mandatory offline precache; static globe remains available offline.

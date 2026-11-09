@@ -1,5 +1,5 @@
-const CACHE='open-devil-v12';
-const FILES=['./?v=12','index.html?v=12','style.css','manifest.json','assets/icon.svg?v=12','assets/icon-192.png','assets/icon-512.png','assets/apple-touch-icon.png','assets/menu-globe.webp','js/worldmap.js','js/data.js','js/locales/data.js','js/locales/news.js','js/locales/ui.js','js/locales/countries.js','js/i18n.js','js/sim.js','js/render.js','js/ui.js','js/strategy.js','js/news.js','js/storage.js','js/main.js'].map(path => /\.(js|css)$/.test(path) ? path + '?v=12' : path);
+const CACHE='open-devil-v13';
+const FILES=['./?v=13','index.html?v=13','style.css','manifest.json','assets/icon.svg?v=13','assets/icon-192.png','assets/icon-512.png','assets/apple-touch-icon.png','assets/menu-globe.webp','js/worldmap.js','js/data.js','js/locales/data.js','js/locales/news.js','js/locales/ui.js','js/locales/countries.js','js/i18n.js','js/sim.js','js/render.js','js/ui.js','js/strategy.js','js/news.js','js/storage.js','js/main.js','js/menu-video.js'].map(path => /\.(js|css)$/.test(path) ? path + '?v=13' : path);
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('open-devil-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{
