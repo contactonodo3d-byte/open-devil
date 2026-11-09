@@ -1,4 +1,17 @@
 (function(G){G.LOCALE_UI=`
+Game navigation|Navegación del juego|Navegação do jogo
+The world.|El mundo.|O mundo.
+Your system.|Tu sistema.|Seu sistema.
+Evolve. Infiltrate. Take control.|Evoluciona. Infíltrate. Toma el control.|Evolua. Infiltre-se. Assuma o controle.
+New operation|Nueva operación|Nova operação
+Details & tradeoffs|Detalles y riesgos|Detalhes e riscos
+Worm|Gusano|Verme
+Social agent|Agente social|Agente social
+Brute force|Fuerza bruta|Força bruta
+Fast spread. High exposure.|Propagación rápida. Mayor exposición.|Propagação rápida. Maior exposição.
+Quiet, persuasive infiltration.|Infiltración discreta y persuasiva.|Infiltração discreta e persuasiva.
+Break into hardened systems.|Accede a sistemas protegidos.|Acesse sistemas protegidos.
+No saved operation|No hay una operación guardada|Nenhuma operação salva
 Language|Idioma|Idioma
 LAB CONTAINMENT BREACH|BRECHA DE CONTENCIÓN DEL LABORATORIO|FALHA NA CONTENÇÃO DO LABORATÓRIO
 SUBJECT: OPEN DEVIL|SUJETO: OPEN DEVIL|SUJEITO: OPEN DEVIL

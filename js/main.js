@@ -234,7 +234,9 @@
 
   function refreshContinue() {
     const saved = window.SaveGame.read();
-    document.getElementById("btn-continue").classList.toggle("hidden", !saved);
+    document.getElementById("btn-continue").classList.remove("hidden");
+    document.getElementById("btn-continue").disabled=!saved;
+    document.getElementById("btn-continue").title=window.I18n.text(saved?"Continue saved operation":"No saved operation");
     document.getElementById("save-status").textContent = window.I18n.text(saved ? "Saved operation · Day " + Math.floor(saved.day) + " · " + saved.difficulty.name : "");
   }
   document.getElementById("btn-continue").onclick = function () {

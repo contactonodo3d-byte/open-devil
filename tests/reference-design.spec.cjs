@@ -1,0 +1,23 @@
+const {test,expect}=require('@playwright/test');
+test('approved design uses real artwork and persistent SVG controls',async({page},info)=>{
+ await page.goto('http://127.0.0.1:8765/index.html?lang=es');
+ if(await page.locator('#intro-skip').isVisible())await page.locator('#intro-skip').click();
+ await page.locator('.hero-world img').evaluate(img=>img.decode());
+ expect(await page.locator('.hero-world img').evaluate(img=>img.naturalWidth)).toBeGreaterThanOrEqual(1000);
+ await expect(page.locator('#archetype-list>.card')).toHaveCount(3);
+ const bounds=await page.locator('#archetype-list>.card').evaluateAll(cards=>cards.map(c=>c.getBoundingClientRect().top));
+ expect(Math.max(...bounds)-Math.min(...bounds)).toBeLessThan(2);
+ await page.locator('#archetype-details').evaluate(el=>{el.open=true;});
+ await expect(page.locator('#archetype-description')).toBeVisible();await page.locator('#archetype-details').evaluate(el=>{el.open=false;});
+ await page.screenshot({path:`test-results/reference-menu-${info.project.name}.png`});
+ await page.locator('#btn-begin').click();const id=await page.evaluate(()=>String(WORLD_MAP.countries.findIndex(c=>c.iso==='USA')));
+ await page.locator('#country-select').selectOption(id);
+ await expect.poll(()=>page.locator('.country-search').evaluate(el=>el.getBoundingClientRect().bottom<=document.querySelector('#map-wrap').getBoundingClientRect().bottom)).toBe(true);
+ await page.locator('#country-go').click();
+ await expect(page.locator('.game-nav>.nav-button>.icon')).toHaveCount(4);
+ await page.locator('#btn-news').click();await expect(page.locator('.game-nav>.nav-button>.icon')).toHaveCount(4);
+ await page.locator('#btn-map').click();await expect(page.locator('.game-nav')).toBeInViewport();
+ await page.locator('#btn-mute').click();await expect(page.locator('#btn-mute use')).toHaveAttribute('href','#icon-mute');
+ await page.locator('#btn-mute').click();await expect(page.locator('#btn-mute use')).toHaveAttribute('href','#icon-sound');
+ await page.screenshot({path:`test-results/reference-game-${info.project.name}.png`});
+});

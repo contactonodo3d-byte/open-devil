@@ -425,14 +425,14 @@
       const path = pathCache[i];
       if (!path || !g) return;
       /* base land — night earth */
-      ctx.fillStyle = pickMode ? "#263b4b" : "#1b3040";
+      ctx.fillStyle = pickMode ? "#3c4f60" : "#314554";
       ctx.fill(path);
       const infection = Math.max(0, Math.min(1, c.infected / Math.max(1, c.pop)));
       if (!pickMode && c.infected > 0) {
         ctx.fillStyle = "rgba(255,65,95," + (0.22 + infection * 0.65) + ")";
         ctx.fill(path);
       }
-      ctx.strokeStyle = "rgba(140,190,210,0.28)";
+      ctx.strokeStyle = "rgba(166,197,214,0.45)";
       ctx.lineWidth = 0.7 / view.scale;
       ctx.stroke(path);
 
@@ -441,7 +441,7 @@
         ctx.save();
         ctx.clip(path);
         /* circuit mesh opacity by control */
-        ctx.globalAlpha = 0.15 + ctrl * 0.55;
+        ctx.globalAlpha = 0.08 + ctrl * 0.32;
         if (g.glitch > 0 && Math.random() < 0.4) {
           ctx.translate((Math.random() - 0.5) * 3, (Math.random() - 0.5) * 2);
         }

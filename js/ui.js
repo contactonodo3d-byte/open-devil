@@ -118,11 +118,18 @@
       setTimeout(finish, 3200);
     }
 
+    function icon(name) {return '<svg class="icon" aria-hidden="true"><use href="#icon-'+name+'"></use></svg>';}
+    function sectorIcon(sec){return icon(({cloud:"chip",telecom:"globe",finance:"data",media:"news",power:"power",sat:"control",military:"people"})[sec.id]||"control");}
+    function archetypeDetails(a) {
+      const model={archetype:a,traitsOwned:[],traitById:{}};G.Sim.recomputeStats(model);
+      $("archetype-stats").innerHTML=window.I18n.html('<span>Spread <b>'+model.stats.infectivity.toFixed(2)+'×</b></span><span>Stealth <b>'+model.stats.stealth.toFixed(2)+'×</b></span><span>Severity <b>'+model.stats.severity.toFixed(2)+'×</b></span>');
+      $("archetype-description").textContent=window.I18n.text(a.flavor+' '+G.ARCHETYPE_DOCTRINES[a.id].desc);
+    }
+
     function renderBoot() {
       feed.reset(); newsState = null; displayedHeadline = null;
       els.news.textContent = window.I18n.text("Choose your origin. Reports will appear as the operation unfolds.");
       $("ticker-category").textContent = window.I18n.text("SITUATION REPORT");
-      els.newsToggle.textContent = window.I18n.text("News");
       lastPanelKey = evoKey = "";
       closeSheets(false, false);
       selectedCountry = -1;
@@ -137,10 +144,9 @@
         const btn = document.createElement("button");
         btn.dataset.archetype = a.id;
         btn.className = "card" + (a.id === G.ARCHETYPES[0].id ? " selected" : "");
-        btn.innerHTML = window.I18n.html("<h3>" + a.name + "</h3><div>" + a.flavor + "</div>" +
-          "<small>Spread ×" + model.stats.infectivity.toFixed(2) +
-          " · Stealth ×" + model.stats.stealth.toFixed(2) +
-          " · Severity ×" + model.stats.severity.toFixed(2) + "</small>" + "<div class='doctrine'>" + G.ARCHETYPE_DOCTRINES[a.id].name + " · " + G.ARCHETYPE_DOCTRINES[a.id].desc + "</div>");
+        const titles={worm:"Worm",social:"Social agent",cracker:"Brute force"};
+        const descriptions={worm:"Fast spread. High exposure.",social:"Quiet, persuasive infiltration.",cracker:"Break into hardened systems."};
+        btn.innerHTML=window.I18n.html(icon(a.id==="worm"?"worm":a.id==="social"?"people":"chip")+'<h3 class="sr-only">'+a.name+'</h3><span class="archetype-name">'+titles[a.id]+'</span><span class="archetype-tagline">'+descriptions[a.id]+'</span><span class="doctrine sr-only">'+G.ARCHETYPE_DOCTRINES[a.id].desc+'</span>');
         btn.addEventListener("click", function () {
           document.querySelectorAll("#archetype-list .card").forEach(function (c) {
             c.classList.remove("selected");
@@ -148,11 +154,13 @@
           btn.classList.add("selected");
           btn.parentElement.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",String(b===btn));});
           hooks.onArchetype(a);
+          archetypeDetails(a);
           beep(660, 0.05);
         });
         btn.setAttribute("aria-pressed",String(a.id===G.ARCHETYPES[0].id));
         list.appendChild(btn);
       });
+      archetypeDetails(G.ARCHETYPES[0]);
       const diffs = $("difficulty-list");
       diffs.innerHTML = window.I18n.html("");
       G.DIFFICULTIES.forEach(function (d) {
@@ -183,7 +191,7 @@
         if(selection){
           const a=G.ARCHETYPES.find(function(a){return a.id===selection.archetype;});
           const d=G.DIFFICULTIES.find(function(d){return d.id===selection.difficulty;});
-          if(a){hooks.onArchetype(a);list.querySelectorAll("button").forEach(function(b){const chosen=b.dataset.archetype===a.id;b.classList.toggle("selected",chosen);b.setAttribute("aria-pressed",String(chosen));});}
+          if(a){hooks.onArchetype(a);archetypeDetails(a);list.querySelectorAll("button").forEach(function(b){const chosen=b.dataset.archetype===a.id;b.classList.toggle("selected",chosen);b.setAttribute("aria-pressed",String(chosen));});}
           if(d){hooks.onDifficulty(d);diffs.querySelectorAll("button").forEach(function(b){const chosen=b.dataset.difficulty===d.id;b.classList.toggle("selected",chosen);b.setAttribute("aria-pressed",String(chosen));});$("difficulty-help").textContent=d.desc;}
         }
       }catch(e){}
@@ -222,7 +230,7 @@
         b.disabled = !!activePanel;
         b.setAttribute("aria-pressed",String(Number(b.dataset.speed) === sp));
         if (Number(b.dataset.speed) === 0) {
-          b.textContent = window.I18n.text(sp === 0 ? "Resume" : "Pause");
+          b.innerHTML=icon(sp===0?"play":"pause")+'<span class="sr-only">'+window.I18n.text(sp===0?"Resume":"Pause")+'</span>';
           b.title = window.I18n.text(activePanel ? "Return to Map to resume" : b.textContent);
         }
       });
@@ -270,7 +278,7 @@
       opener.setAttribute("aria-expanded", "true");
       if (evoOpen) renderEvo(state);
       if (statsOpen) renderStats(state);
-      if (newsOpen) { renderNewsLog(state); feed.markRead(); els.newsToggle.textContent = window.I18n.text("News"); }
+      if (newsOpen) { renderNewsLog(state); feed.markRead();  }
       setSpeed(0);
       panel.querySelector(".sheet-close").focus();
     }
@@ -296,12 +304,24 @@
         entry[0].setAttribute("aria-pressed",String(entry[1]===kind));
       });
     }
+    function sizeCountryLookup(){
+      const tools=$("country-tools"),map=$("map-wrap");
+      if(tools.open)tools.querySelector(".country-search").style.maxHeight=Math.max(80,map.clientHeight-tools.offsetTop-tools.querySelector("summary").offsetHeight-12)+"px";
+    }
+    $("country-tools").addEventListener("toggle",sizeCountryLookup);
+    if(window.ResizeObserver)new ResizeObserver(sizeCountryLookup).observe($("map-wrap"));
+    $("country-chip").onclick=function(){
+      const state=hooks.getState();if(!state)return;
+      const id=selectedCountry>=0?selectedCountry:state.startCountry;
+      closeSheets(true,false);if(id!==null)showCountry(state,id);
+    };
     $("news-filter").onchange = function () { renderNewsLog(hooks.getState()); };
     document.addEventListener("visibilitychange", function () { if (document.hidden && activePanel) panelWasPaused = true; });
     if (els.muteBtn) {
       els.muteBtn.addEventListener("click", function () {
         muted = !muted;
-        els.muteBtn.textContent = window.I18n.text(muted ? "Muted" : "Sound");
+        els.muteBtn.innerHTML=icon(muted?"mute":"sound")+'<span class="sr-only">'+window.I18n.text(muted?"Muted":"Sound")+'</span>';
+        els.muteBtn.setAttribute("aria-label",window.I18n.text(muted?"Muted":"Sound"));
         if (!muted) ensureAudio();
       });
     }
@@ -405,7 +425,7 @@
         if (fresh) { btn = document.createElement("button"); btn.dataset.power=pw.id; }
         btn.className = "power-btn" + (ready ? " ready" : "");
         btn.title = window.I18n.text(pw.desc);
-        btn.innerHTML = window.I18n.html("<span class='pi'>" + pw.icon + "</span><span class='pn'>" + pw.name + "</span>" +
+        btn.innerHTML = window.I18n.html("<span class='pi'>" + icon(({blackout:"power",deepfake:"people",flashcrash:"data",zeroday:"chip"})[pw.id]||"control") + "</span><span class='pn'>" + pw.name + "</span>" +
           "<span class='pcd'>" + (ready ? "READY" : (cd > 0 ? cd.toFixed(0) + "d" : "need " + (pw.intelReq && state.intelLevel < pw.intelReq ? G.INTEL_LEVELS[pw.intelReq].name : (G.SECTORS.find(function(sec){return sec.id===pw.needSector;})||{}).name || pw.needSector))) + "</span>");
         btn.disabled = !ready;
         if (fresh) btn.addEventListener("click", function () {
@@ -431,7 +451,7 @@
       html += "<div class='sector-icons'>";
       (G.SECTORS || []).forEach(function (sec) {
         const n = (tot.sectorCounts && tot.sectorCounts[sec.id]) || 0;
-        html += "<span title='" + sec.name + "'>" + sec.icon + " " + n + "</span>";
+        html += "<span title='" + sec.name + "'>" + sectorIcon(sec) + " " + n + "</span>";
       });
       html += "</div>";
       const rows = state.world.countries.map(function (c) {
@@ -442,7 +462,7 @@
       rows.slice(0, 60).forEach(function (r) {
         let icons = "";
         (G.SECTORS || []).forEach(function (sec) {
-          if (r.sectors && r.sectors[sec.id]) icons += sec.icon;
+          if (r.sectors && r.sectors[sec.id]) icons += sectorIcon(sec);
         });
         html += "<tr><td>" + r.name + (r.closed ? " 🔒" : "") + "</td><td>" +
           (r.ctrl * 100).toFixed(1) + "%</td><td>" + icons + "</td></tr>";
@@ -450,6 +470,7 @@
       html += "</tbody></table>";
       els.statsBody.innerHTML = window.I18n.html(html);
       els.statsBody.prepend(goalChecklist(state));
+      els.statsBody.prepend(els.powers);
     }
 
     function goalChecklist(state) {
@@ -525,7 +546,6 @@
         $("ticker-category").textContent = window.I18n.text(importantReport(displayedHeadline) ? "PRIORITY REPORT" : "SITUATION REPORT");
       }
       if (newsOpen) feed.markRead();
-      els.newsToggle.textContent = window.I18n.text("News");
       els.newsToggle.classList.toggle("unread", !newsOpen && result.unread > 0);
       els.newsToggle.setAttribute("aria-label", window.I18n.text("News" + (!newsOpen && result.unread ? ", " + result.unread + " unread reports" : "")));
       // Reports have one presentation surface. No flashing banner or surprise modal.
@@ -558,7 +578,7 @@
         (state.hubs.indexOf(id) >= 0 ? " · HUB" : ""));
       let secIcons = "";
       (G.SECTORS || []).forEach(function (sec) {
-        if (c.sectors && c.sectors[sec.id]) secIcons += "<span title='" + sec.name + "'>" + sec.icon + "</span>";
+        if (c.sectors && c.sectors[sec.id]) secIcons += "<span title='" + sec.name + "'>" + sectorIcon(sec) + "</span>";
       });
       $("cp-detail").innerHTML =
         window.I18n.html("Compromised " + formatPop(c.infected) +
@@ -609,6 +629,9 @@
         els.hudOvert.textContent = window.I18n.text("Overt " + (tot.infra * 100).toFixed(0) + "/" + (tot.military * 100).toFixed(0));
       }
 
+      const chip=$("country-chip"),country=state.world.countries[selectedCountry>=0?selectedCountry:state.startCountry];
+      chip.classList.toggle("hidden",!country||!els.country.classList.contains("hidden"));
+      if(country){chip.querySelector("span").textContent=window.I18n.text(country.name+" · Control "+((country.infected+country.neutralized)/country.pop*100).toFixed(1)+"%");}
       setSpeed(state.paused ? 0 : state.speed);
 
       const evolvable = G.TRAITS.some(function(trait){return G.Sim.canBuyTrait(state,trait.id);});

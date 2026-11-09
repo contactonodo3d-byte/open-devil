@@ -167,3 +167,19 @@ a clientWidth, scrollLeft invariable en cero tras intentar moverlo y tras alcanz
 botón de inicio, y scroll vertical utilizable. Cubre tres idiomas y anchos de 320,
 390, 430 y 844px. Se añadió un proyecto WebKit específico a CI. Estas comprobaciones
 no equivalen a una prueba manual en el dispositivo físico del usuario.
+
+## Build 9: implementación del diseño aprobado
+
+Se aplicó la primera propuesta visual generada: arte de globo original optimizado a
+WebP (~81 KB), marca vectorial, tarjetas compactas de inteligencia, selección de
+nivel, CTAs y controles nativos. Los datos del arquetipo siguen disponibles en stats
+y detalles desplegables. Iconos vectoriales sustituyen glifos y emojis en navegación,
+poderes y sectores; se generaron iconos PNG para instalación/iOS.
+
+La partida conserva datos reales de Sim y geometría Natural Earth. HUD, medidor,
+mapa, tarjeta de noticias y barra inferior ocupan áreas propias. Los paneles mantienen
+el mapa visible y Back accesible; las noticias duplicadas se ocultan durante la lectura
+y los poderes forman parte del scroll de Mundo. La búsqueda de país calcula su altura
+según el mapa visible, evitando recortar el perfil de origen. Se actualizaron los
+checks geométricos para la navegación inferior y se agregaron pruebas de recursos,
+SVG persistente, selección y acceso al país. No se alteró el balance de simulación.

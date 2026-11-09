@@ -183,3 +183,22 @@ automatic form-focus zoom in mobile Safari. Menu overflow tests inspect the actu
 `#boot-screen` scroller, attempt horizontal scrolling, verify vertical scrolling and
 exercise the launch button in English, Spanish and Portuguese at four viewport sizes.
 A dedicated WebKit project runs the same checks in CI alongside Chromium.
+
+## Build 9: approved visual design
+
+The crimson-globe concept is implemented as native, responsive HTML/CSS/Canvas:
+original generated globe artwork (optimized WebP, about 81 KB), devil-chip branding,
+three icon-based archetype cards, an explicit selected-stat/tradeoff disclosure, and
+matching PNG/SVG app icons. Artwork is decorative; controls and text remain accessible,
+localized DOM rather than an image of a user interface.
+
+Gameplay uses three resource cards, a separate Kill Switch meter, a full-text report
+card and four persistent SVG-icon navigation buttons at the bottom. Country search
+lives on the map. Planning workspaces keep the map visible; duplicate headlines hide
+while reading/planning. Powers scroll with World content to preserve usable room on
+small phones. Navigation retains all close, pause, keyboard and focus behavior.
+
+The image-generation source is preserved outside the repository; only the optimized
+production asset is bundled. The new icon symbols are authored vectors. The existing
+Natural Earth geometry still drives the interactive map, with updated contrast and
+infection colors. Menu overflow protection and 16px native language controls remain.

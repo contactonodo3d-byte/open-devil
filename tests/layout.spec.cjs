@@ -15,10 +15,10 @@ for(const viewport of [{width:320,height:568},{width:390,height:844},{width:844,
    const panel=page.locator('#'+name+'-panel');await expect(panel).toBeVisible();
    const geometry=await page.evaluate((name)=>{
     const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height,right:r.right,bottom:r.bottom};};
-    return {map:rect('map-wrap'),panel:rect(name+'-panel'),stage:rect('workspace-stage'),nav:document.querySelector('.game-nav').getBoundingClientRect().bottom,scroll:document.documentElement.scrollWidth};
+    return {map:rect('map-wrap'),panel:rect(name+'-panel'),stage:rect('workspace-stage'),nav:document.querySelector('.game-nav').getBoundingClientRect().top,scroll:document.documentElement.scrollWidth};
    },name);
    expect(geometry.map.w).toBeGreaterThan(130);expect(geometry.map.h).toBeGreaterThan(100);
-   expect(geometry.panel.y).toBeGreaterThanOrEqual(geometry.nav-1);
+   expect(geometry.panel.bottom).toBeLessThanOrEqual(geometry.nav+1);
    expect(geometry.panel.bottom).toBeLessThanOrEqual(viewport.height+1);
    expect(geometry.scroll).toBeLessThanOrEqual(viewport.width);
    const overlap=Math.min(geometry.map.right,geometry.panel.right)-Math.max(geometry.map.x,geometry.panel.x);

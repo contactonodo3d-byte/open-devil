@@ -4,6 +4,8 @@ for(const lang of ['en','es','pt']){
   await page.setViewportSize({width:390,height:700});
   await page.goto('http://127.0.0.1:8765/index.html?lang='+lang);
   if(await page.locator('#intro-skip').isVisible())await page.locator('#intro-skip').click();
+  await page.locator(".hero-world img").evaluate(img=>img.decode());
+  expect(await page.locator(".wordmark>.icon").evaluate(el=>el.getBBox().width)).toBeGreaterThan(0);
   for(const width of [320,390,430,844]){
    await page.setViewportSize({width,height:width===844?390:700});
    const geometry=await page.locator('#boot-screen').evaluate(el=>{
