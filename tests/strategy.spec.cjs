@@ -9,7 +9,10 @@ test('strategic decisions have previews, actual effects, goals and a debrief',as
  await page.locator('#country-go').click();await page.locator('#btn-evo').click();
  await expect(page.locator('[data-trait="email"] .effect-preview')).toContainText('Spread');
  const after=await page.evaluate(()=>Strategy.preview(__OD.getState(),'email').find(r=>r.key==='infectivity').after);
- await page.locator('[data-trait="email"]').click();expect(await page.evaluate(()=>__OD.getState().stats.infectivity)).toBe(after);
+ await expect(page.locator('#evo-resources')).toContainText('Available Data');
+ await expect(page.locator('[data-trait="email"] .trait-action')).toContainText('Evolve now');
+ await page.locator('[data-trait="email"]').click();await expect(page.locator('[data-trait="email"] .trait-action')).toContainText('Devolve');
+ expect(await page.locator('#evo-resources b').first().textContent()).toBe(String(Math.floor(await page.evaluate(()=>__OD.getState().data))));expect(await page.evaluate(()=>__OD.getState().stats.infectivity)).toBe(after);
  await page.locator('#btn-stats').click();await expect(page.locator('.goal-route')).toHaveCount(3);
  await expect(page.locator('.goal-checklist')).toContainText('Absolute control');
  await page.locator('#btn-news').click();await expect(page.locator('.report-impact').first()).toBeVisible();

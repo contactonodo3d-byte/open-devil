@@ -1,4 +1,11 @@
 (function(G){G.LOCALE_UI=`
+OWNED|ADQUIRIDA|ADQUIRIDA
+Available Data|Datos disponibles|Dados disponíveis
+Evolutions owned|Evoluciones adquiridas|Evoluções adquiridas
+Devolve|Revertir evolución|Reverter evolução
+Requirements not met|Faltan requisitos|Requisitos pendentes
+Evolve now|Evolucionar ahora|Evoluir agora
+Gather more Data|Reúne más datos|Reúna mais dados
 Game navigation|Navegación del juego|Navegação do jogo
 The world.|El mundo.|O mundo.
 Your system.|Tu sistema.|Seu sistema.

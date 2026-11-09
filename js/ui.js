@@ -346,16 +346,18 @@
     function renderEvo(state) {
       if (!els.evoTabs || !els.evoBody || !state) return;
 
+      $("evo-resources").innerHTML=window.I18n.html("<span>"+icon("data")+"<span>Available Data</span><b>"+Math.floor(state.data)+"</b></span><span>"+icon("dna")+"<span>Evolutions owned</span><b>"+state.traitsOwned.length+"</b></span>");
       G.TRAIT_TABS.forEach(function (tab) {
         let b = els.evoTabs.querySelector("[data-tab=\""+tab.id+"\"]");
         const freshTab = !b;
         if (freshTab) {b=document.createElement("button");b.dataset.tab=tab.id;}
         b.setAttribute("aria-pressed",String(tab.id===evoTab));
         b.className = "evo-tab" + (tab.id === evoTab ? " active" : "");
-        b.textContent = window.I18n.text(tab.name);
+        b.innerHTML = icon(({vectors:"globe",behaviors:"people",abilities:"chip"})[tab.id]||"dna")+"<span>"+window.I18n.text(tab.name)+"</span>";
         if (freshTab) b.addEventListener("click", function () {
           evoTab = tab.id;
           renderEvo(hooks.getState());
+          els.evoBody.scrollTop=0;
         });
         if (freshTab) els.evoTabs.appendChild(b);
       });
@@ -384,7 +386,7 @@
         card.dataset.trait = t.id;
         card.disabled = !owned && !can;
         card.className = "trait-card" + (owned ? " owned" : "") + (can ? " can" : "") + (locked ? " locked" : "");
-        card.innerHTML = window.I18n.html("<div class='tn'>" + t.name + "</div>" +
+        card.innerHTML = window.I18n.html("<div class='trait-heading'><span class='trait-symbol'>"+icon(({vectors:"globe",behaviors:"people",abilities:"chip"})[t.tab]||"dna")+"</span><div class='tn'>" + t.name + "</div><span class='trait-price'>"+(owned?icon("dna"):icon("data"))+(owned?window.I18n.text("OWNED"):cost)+"</span></div>" +
           "<div class='td'>" + t.desc + "</div>" +
           "<div class='tc'>" + (owned ? "OWNED · tap to devolve" :
             lockedIntel ? ("LOCKED · need " + ((G.INTEL_LEVELS || [])[t.intelReq] || {}).name) :
@@ -399,6 +401,7 @@
           row.append(name,value);preview.appendChild(row);
         });
         card.appendChild(preview);
+        const action=document.createElement("div");action.className="trait-action";action.innerHTML=icon(owned?"dna":locked?"chip":"arrow")+"<span>"+window.I18n.text(owned?"Devolve":locked?"Requirements not met":can?"Evolve now":"Gather more Data")+"</span>";card.appendChild(action);
         if(owned&&!G.Sim.canDevolve(state,t.id)) {card.disabled=true;card.querySelector(".tc").textContent=window.I18n.text("Required by another owned evolution");}
         if (freshCard) card.addEventListener("click", function () {
           const current = hooks.getState();
@@ -442,7 +445,7 @@
       if (!state) return;
       const tot = G.Sim.totals(state);
       const lv = (G.INTEL_LEVELS || [])[state.intelLevel] || { name: "?" };
-      let html = "<div class='sector-summary'><b>Intelligence:</b> " + lv.name +
+      let html = "<div class='world-metrics'><div>"+icon("globe")+"<span>Controlled</span><b>"+(tot.infra*100).toFixed(1)+"%</b></div><div>"+icon("chip")+"<span>Intelligence</span><b>"+lv.name+"</b></div></div><div class='sector-summary'><b>Intelligence:</b> " + lv.name +
         " (" + state.intelligence.toFixed(0) + ")" +
         " · <b>Shadow:</b> " + (tot.critical * 100).toFixed(0) + "% crit / alarm " +
         (tot.globalAlarm * 100).toFixed(0) + "%" +
@@ -464,7 +467,7 @@
         (G.SECTORS || []).forEach(function (sec) {
           if (r.sectors && r.sectors[sec.id]) icons += sectorIcon(sec);
         });
-        html += "<tr><td>" + r.name + (r.closed ? " 🔒" : "") + "</td><td>" +
+        html += "<tr><td>" + r.name + (r.closed ? " "+icon("chip") : "") + "</td><td>" +
           (r.ctrl * 100).toFixed(1) + "%</td><td>" + icons + "</td></tr>";
       });
       html += "</tbody></table>";
@@ -483,7 +486,8 @@
           const line=document.createElement("div");line.className="goal-check "+(check.ok?"met":"missing");
           const name=document.createElement("span");name.textContent=window.I18n.text((check.ok?"Met · ":"Need · ")+check.label);
           const value=document.createElement("b");value.textContent=window.I18n.text((check.value*100).toFixed(1)+"% / "+check.direction+" "+(check.target*100).toFixed(1)+"%");
-          line.append(name,value);card.appendChild(line);
+          line.append(name,value);
+          const meter=document.createElement("div");meter.className="goal-meter";const fill=document.createElement("span");fill.style.width=Math.max(0,Math.min(100,check.direction===">="?check.value/check.target*100:check.ok?100:check.target/Math.max(check.value,.0001)*100))+"%";meter.appendChild(fill);line.appendChild(meter);card.appendChild(line);
         });section.appendChild(card);
       });
       const note=document.createElement("p");note.textContent=window.I18n.text("All conditions in one route must hold together. Kill Switch 100% ends the game first. Infrastructure is weighted by country and sector, not just population.");section.appendChild(note);
@@ -511,7 +515,7 @@
         const category = document.createElement("span");
         category.textContent = window.I18n.text(importantReport(item) ? "PRIORITY REPORT" : item.kind === "flavor" ? "WORLD DISPATCH" : "OPERATION UPDATE");
         const day = document.createElement("span"); day.textContent = window.I18n.text("DAY " + Math.floor(item.t || 0));
-        meta.append(category, day);
+        const badge=document.createElement("span");badge.className="report-badge";badge.innerHTML=icon("news");meta.append(badge,category, day);
         const body = document.createElement("p"); body.textContent = window.I18n.text(item.text.replace(/^BREAKING:\s*/, ""));
         card.append(meta, body);
         const advice=G.Strategy.report(item);

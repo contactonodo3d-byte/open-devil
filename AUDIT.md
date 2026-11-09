@@ -183,3 +183,6 @@ y los poderes forman parte del scroll de Mundo. La búsqueda de país calcula su
 según el mapa visible, evitando recortar el perfil de origen. Se actualizaron los
 checks geométricos para la navegación inferior y se agregaron pruebas de recursos,
 SVG persistente, selección y acceso al país. No se alteró el balance de simulación.
+
+## Build 10 — matching strategy workspaces
+Evolution, World, News, country details, guide and debrief now share the approved crimson command design. Evolution shows real Data, owned count, icon categories, cost and explicit purchase/devolve states; tab switches reset content scroll. World goals have progress meters and news has SVG report badges. Persistent exits and independent scrolling remain.
